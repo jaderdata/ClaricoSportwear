@@ -154,6 +154,26 @@ export default function AdminDashboard() {
     setAddAcademyModalOpen(true);
   };
 
+  const handleAcademyLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setAcademyError('A imagem deve ter menos de 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setNewAcadLogo(event.target.result as string);
+        setAcademyError('');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleDeleteAcademy = (id: string) => {
     if (!confirm('Tem certeza que deseja remover esta academia parceira?')) return;
     const updated = academies.filter(a => a.id !== id);
@@ -1136,15 +1156,55 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-300 uppercase text-xs mb-1">URL do Logo (Imagem)</label>
-                <input
-                  type="url"
-                  placeholder="https://exemplo.com/logo.png ou /images/..."
-                  value={newAcadLogo}
-                  onChange={(e) => setNewAcadLogo(e.target.value)}
-                  className="w-full touch-target px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:border-red-500 outline-none"
-                />
-                <p className="text-[11px] text-slate-500 mt-1">Cole a URL da imagem de logo da academia.</p>
+                <label className="block font-bold text-slate-300 uppercase text-xs mb-1.5">Logo da Academia (Imagem)</label>
+
+                {/* Computer File Upload Box */}
+                <div className="border-2 border-dashed border-slate-700 hover:border-red-500 rounded-xl p-4 text-center transition-colors bg-slate-900/60 mb-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAcademyLogoFileUpload}
+                    className="hidden"
+                    id="academy-logo-file-input"
+                  />
+                  <label htmlFor="academy-logo-file-input" className="cursor-pointer block">
+                    {newAcadLogo ? (
+                      <div className="flex items-center justify-center gap-3">
+                        <img src={newAcadLogo} alt="Preview" className="size-12 rounded-xl object-cover border border-slate-700 bg-black shrink-0" />
+                        <div className="text-left">
+                          <span className="text-xs font-bold text-emerald-400 block">✓ Imagem Selecionada</span>
+                          <span className="text-[11px] text-slate-400">Clique para carregar outro arquivo do computador</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-1 py-1">
+                        <div className="text-2xl">📁</div>
+                        <span className="text-xs font-bold text-white block">Clique para enviar imagem do seu Computador</span>
+                        <span className="text-[11px] text-slate-400 block">PNG, JPG, SVG ou WEBP até 5MB</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+
+                {/* Alternative URL Input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Ou cole a URL da imagem (https://...)"
+                    value={newAcadLogo}
+                    onChange={(e) => setNewAcadLogo(e.target.value)}
+                    className="w-full touch-target px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:border-red-500 outline-none pr-16"
+                  />
+                  {newAcadLogo && (
+                    <button
+                      type="button"
+                      onClick={() => setNewAcadLogo('')}
+                      className="absolute right-2 top-1.5 text-xs font-bold text-slate-400 hover:text-red-400 px-2 py-1 rounded bg-slate-800"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
               </div>
 
               {academyError && (
