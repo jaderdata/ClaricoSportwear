@@ -204,3 +204,45 @@ CREATE POLICY "Admin Delete from product-images"
     FOR DELETE
     TO authenticated
     USING (bucket_id = 'product-images');
+
+
+-- 7. Create Partner Academies Table
+CREATE TABLE IF NOT EXISTS public.cs_partner_academies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    name TEXT NOT NULL,
+    subtitle TEXT,
+    initials TEXT,
+    logo_url TEXT
+);
+
+ALTER TABLE public.cs_partner_academies ENABLE ROW LEVEL SECURITY;
+
+-- Security Policies for cs_partner_academies
+DROP POLICY IF EXISTS "Allow public select on cs_partner_academies" ON public.cs_partner_academies;
+CREATE POLICY "Allow public select on cs_partner_academies"
+    ON public.cs_partner_academies
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS "Allow admin insert on cs_partner_academies" ON public.cs_partner_academies;
+CREATE POLICY "Allow admin insert on cs_partner_academies"
+    ON public.cs_partner_academies
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin update on cs_partner_academies" ON public.cs_partner_academies;
+CREATE POLICY "Allow admin update on cs_partner_academies"
+    ON public.cs_partner_academies
+    FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin delete on cs_partner_academies" ON public.cs_partner_academies;
+CREATE POLICY "Allow admin delete on cs_partner_academies"
+    ON public.cs_partner_academies
+    FOR DELETE
+    TO authenticated
+    USING (true);
