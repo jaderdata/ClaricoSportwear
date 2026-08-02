@@ -107,31 +107,20 @@ export default function AdminDashboardClient() {
   const [newAcadInitials, setNewAcadInitials] = useState('');
   const [newAcadLogo, setNewAcadLogo] = useState('');
   const [academyError, setAcademyError] = useState('');
+  const [academyDeleteError, setAcademyDeleteError] = useState('');
+  const [isSavingAcademy, setIsSavingAcademy] = useState(false);
 
-  const fetchAcademies = () => {
+  const fetchAcademies = async () => {
     try {
-      const saved = localStorage.getItem('clarico_partner_academies');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAcademies(parsed);
-          return;
-        }
+      const { data } = await supabase.from('cs_partner_academies').select('*').order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        setAcademies(data as PartnerAcademy[]);
+        return;
       }
     } catch (e) {
       console.error(e);
     }
     setAcademies(DEFAULT_PARTNER_ACADEMIES);
-  };
-
-  const saveAcademiesToStorage = (updated: PartnerAcademy[]) => {
-    setAcademies(updated);
-    try {
-      localStorage.setItem('clarico_partner_academies', JSON.stringify(updated));
-      window.dispatchEvent(new Event('clarico_academies_updated'));
-    } catch (e) {
-      console.error(e);
-    }
   };
 
   const handleOpenAddAcademy = () => {
@@ -174,41 +163,74 @@ export default function AdminDashboardClient() {
     reader.readAsDataURL(file);
   };
 
-  const handleDeleteAcademy = (id: string) => {
+  // Sample placeholder rows (DEFAULT_PARTNER_ACADEMIES) only ever exist in code, never in the
+  // database — they're shown when cs_partner_academies is empty and use non-UUID ids like "acad-1".
+  const isSampleAcademy = (id: string) => DEFAULT_PARTNER_ACADEMIES.some(a => a.id === id);
+
+  const handleDeleteAcademy = async (id: string) => {
     if (!confirm('Tem certeza que deseja remover esta academia parceira?')) return;
-    const updated = academies.filter(a => a.id !== id);
-    saveAcademiesToStorage(updated);
+    setAcademyDeleteError('');
+
+    if (isSampleAcademy(id)) {
+      // Nothing to delete in the database — just hide the sample card locally.
+      setAcademies(prev => prev.filter(a => a.id !== id));
+      return;
+    }
+
+    const { error } = await supabase.from('cs_partner_academies').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting academy:', error.message, error.code, error.details);
+      setAcademyDeleteError(`${error.message}${error.code ? ` (code: ${error.code})` : ''}`);
+      return;
+    }
+    setAcademies(prev => prev.filter(a => a.id !== id));
   };
 
-  const handleSubmitAcademy = (e: React.FormEvent) => {
+  const handleSubmitAcademy = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSavingAcademy) return;
     if (!newAcadName.trim()) {
       setAcademyError('Por favor insira o nome da academia.');
       return;
     }
 
-    if (editingAcademyId) {
-      const updated = academies.map(a =>
-        a.id === editingAcademyId
-          ? {
-              ...a,
-              name: newAcadName.trim(),
-              subtitle: newAcadSubtitle.trim() || 'Custom Academy Apparel',
-              initials: newAcadInitials.trim().toUpperCase() || newAcadName.substring(0, 3).toUpperCase(),
-              logo_url: newAcadLogo.trim(),
-            }
-          : a
-      );
-      saveAcademiesToStorage(updated);
+    const acadFields = {
+      name: newAcadName.trim(),
+      subtitle: newAcadSubtitle.trim() || 'Custom Academy Apparel',
+      initials: newAcadInitials.trim().toUpperCase() || newAcadName.substring(0, 3).toUpperCase(),
+      logo_url: newAcadLogo.trim(),
+    };
+
+    setIsSavingAcademy(true);
+    setAcademyError('');
+
+    // Sample rows only exist in code, so "editing" one really means creating the first real row.
+    if (editingAcademyId && !isSampleAcademy(editingAcademyId)) {
+      const { data, error } = await supabase
+        .from('cs_partner_academies')
+        .update(acadFields)
+        .eq('id', editingAcademyId)
+        .select('*')
+        .single();
+      setIsSavingAcademy(false);
+      if (error) {
+        setAcademyError(error.message);
+        return;
+      }
+      setAcademies(prev => prev.map(a => (a.id === editingAcademyId ? (data as PartnerAcademy) : a)));
     } else {
-      const newAcad: PartnerAcademy = {
-        id: `acad-${Date.now()}`,
-        name: newAcadName.trim(),
-        subtitle: newAcadSubtitle.trim() || 'Custom Academy Apparel',
-        initials: newAcadInitials.trim().toUpperCase() || newAcadName.substring(0, 3).toUpperCase(),
-        logo_url: newAcadLogo.trim(),
-      };
-      saveAcademiesToStorage([newAcad, ...academies]);
+      const { data, error } = await supabase
+        .from('cs_partner_academies')
+        .insert(acadFields)
+        .select('*')
+        .single();
+      setIsSavingAcademy(false);
+      if (error) {
+        setAcademyError(error.message);
+        return;
+      }
+      // Drop any remaining sample placeholders now that a real row exists.
+      setAcademies(prev => [data as PartnerAcademy, ...prev.filter(a => !isSampleAcademy(a.id))]);
     }
 
     setAddAcademyModalOpen(false);
@@ -857,6 +879,12 @@ export default function AdminDashboardClient() {
               </button>
             </div>
 
+            {academyDeleteError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold">
+                Falha ao excluir academia: {academyDeleteError}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {academies.map((acad) => (
                 <div key={acad.id} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex items-center justify-between gap-4 hover:border-slate-700 transition-all">
@@ -1291,9 +1319,10 @@ export default function AdminDashboardClient() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg cursor-pointer"
+                  disabled={isSavingAcademy}
+                  className="flex-1 py-3 rounded-xl bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingAcademyId ? 'Salvar Alterações' : 'Adicionar Academia'}
+                  {isSavingAcademy ? 'Salvando...' : editingAcademyId ? 'Salvar Alterações' : 'Adicionar Academia'}
                 </button>
               </div>
             </form>

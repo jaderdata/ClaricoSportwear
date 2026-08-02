@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { PartnerAcademy, DEFAULT_PARTNER_ACADEMIES } from '@/lib/supabase';
+import { supabase, PartnerAcademy, DEFAULT_PARTNER_ACADEMIES } from '@/lib/supabase';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { ShieldCheck } from 'lucide-react';
@@ -9,33 +9,21 @@ import { ShieldCheck } from 'lucide-react';
 export const PartnerCarousel: React.FC = () => {
   const [academies, setAcademies] = useState<PartnerAcademy[]>(DEFAULT_PARTNER_ACADEMIES);
 
-  const loadAcademies = () => {
-    try {
-      const saved = localStorage.getItem('clarico_partner_academies');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAcademies(parsed);
-          return;
-        }
-      }
-    } catch {
-      // Ignore fallback
-    }
-    setAcademies(DEFAULT_PARTNER_ACADEMIES);
-  };
-
   useEffect(() => {
+    async function loadAcademies() {
+      try {
+        const { data } = await supabase.from('cs_partner_academies').select('*').order('created_at', { ascending: false });
+        if (data && data.length > 0) {
+          setAcademies(data as PartnerAcademy[]);
+        } else {
+          setAcademies(DEFAULT_PARTNER_ACADEMIES);
+        }
+      } catch (err) {
+        console.error('Failed fetching partner academies from Supabase:', err);
+        setAcademies(DEFAULT_PARTNER_ACADEMIES);
+      }
+    }
     loadAcademies();
-
-    const handleStorageChange = () => loadAcademies();
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('clarico_academies_updated', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('clarico_academies_updated', handleStorageChange);
-    };
   }, []);
 
   // Duplicate items for continuous seamless looping marquee
