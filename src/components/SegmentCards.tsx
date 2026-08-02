@@ -15,7 +15,7 @@ export const SegmentCards: React.FC = () => {
       headline: 'Academy Identity. On & off the mat.',
       description: 'Custom apparel for Jiu-Jitsu schools, academies, coaches, and students. Elevate your school brand with no minimum order requirements.',
       cta: 'Explore Academy Gear',
-      image: '/images/bjj-championship-shirt.png',
+      image: 'https://images.unsplash.com/photo-1682545888368-587f56efd06e?auto=format&fit=crop&q=80&w=1600',
     },
     {
       id: 'tournaments',
@@ -27,13 +27,13 @@ export const SegmentCards: React.FC = () => {
       image: '/images/custom-music-tshirt.jpg',
     },
     {
-      id: 'gyms',
+      id: 'coaches-staff',
       href: '/sports#sport-types',
-      tag: 'Gyms & Athletic Merch',
+      tag: 'Coaches & Academy Merch',
       headline: 'Coach, staff & member apparel.',
-      description: 'Premium streetwear tees, hoodies, and activewear for CrossFit boxes, MMA gyms, and fitness clubs looking to launch signature merch lines.',
-      cta: 'Explore Gym Collections',
-      image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=1600',
+      description: 'Premium streetwear tees, hoodies, and activewear for Jiu-Jitsu academies, coaches, and staff looking to launch signature merch lines.',
+      cta: 'Explore Academy Collections',
+      image: '/images/academy-coach.png',
     },
   ];
 

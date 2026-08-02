@@ -12,12 +12,7 @@ import { Section } from '@/components/ui/Section';
 import { Button } from '@/components/ui/Button';
 
 const sportCategories = [
-  { name: 'Jiu-Jitsu', sub: 'Academies · Tournaments · Team Gear', primary: true },
-  { name: 'MMA', sub: 'Fight Teams · Gym Merch', primary: false },
-  { name: 'Wrestling', sub: 'Team Shirts · Competition Apparel', primary: false },
-  { name: 'Muay Thai', sub: 'Gym Apparel · Event Shirts', primary: false },
-  { name: 'CrossFit', sub: 'Box Apparel · Competition Wear', primary: false },
-  { name: 'Fitness', sub: 'Gym Shirts · Coach Apparel', primary: false },
+  { name: 'Jiu-Jitsu Academies', sub: 'School Apparel · Custom Gis & Merch', primary: true },
 ];
 
 const bjjCategories = [
@@ -57,7 +52,7 @@ export default function SportsPageClient() {
                 Your Identity.
               </h1>
               <p className="text-body-lg text-paper/75 max-w-xl mb-10 leading-relaxed">
-                Premium custom apparel for academies, teams, athletes, and events. Jiu-Jitsu is our home ground — but we build for every competitor.
+                Premium custom apparel focused 100% on Jiu-Jitsu academies, teams, athletes, and championship events.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button onClick={handleOpenQuote} size="lg" withArrow>
@@ -76,12 +71,12 @@ export default function SportsPageClient() {
           <Container>
             <div className="max-w-2xl mb-14">
               <p className="eyebrow mb-4">Sport Categories</p>
-              <h2 className="font-display text-h1 text-ink">We build for every competitor.</h2>
+              <h2 className="font-display text-h1 text-ink">Built 100% for Jiu-Jitsu.</h2>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-10 pt-6 border-t border-border">
+            <div className="pt-6 border-t border-border">
               {sportCategories.map((sport) => (
-                <div key={sport.name}>
+                <div key={sport.name} className="max-w-md">
                   <p className={`text-[15px] ${sport.primary ? 'text-accent font-semibold' : 'text-ink font-medium'}`}>
                     {sport.name}
                   </p>

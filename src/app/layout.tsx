@@ -103,7 +103,7 @@ export default function RootLayout({
     "description": "Premium custom apparel studio for sports teams, individuals, and businesses. No minimum order, Next Level quality, fast DTF printing.",
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+1-800-555-0199",
+      "telephone": "+1-407-633-9166",
       "contactType": "customer service",
       "areaServed": "US",
       "availableLanguage": "English"

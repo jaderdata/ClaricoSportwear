@@ -28,9 +28,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQuote }) => {
             <h4 className="text-sm font-medium text-ink">Sport Categories</h4>
             <ul className="space-y-3 text-[15px] text-ink-muted">
               <li><Link href="/sports#sport-types" className="hover:text-ink transition-colors">Jiu-Jitsu Academies</Link></li>
-              <li><Link href="/sports#sport-types" className="hover:text-ink transition-colors">MMA & Fight Teams</Link></li>
-              <li><Link href="/sports#sport-types" className="hover:text-ink transition-colors">Wrestling & Combat</Link></li>
-              <li><Link href="/sports#sport-types" className="hover:text-ink transition-colors">CrossFit & Fitness</Link></li>
             </ul>
           </div>
 
@@ -48,7 +45,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQuote }) => {
             <h4 className="text-sm font-medium text-ink">Contact</h4>
             <div className="space-y-3 text-[15px] text-ink-muted">
               <div>support@claricostudio.com</div>
-              <div>+1 (800) 555-CLARICO</div>
+              <div>+1 (407) 633-9166</div>
               <div>United States</div>
             </div>
             <button

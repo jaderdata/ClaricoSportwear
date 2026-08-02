@@ -7,7 +7,7 @@ import { SegmentCards } from '@/components/SegmentCards';
 import { ValueProps } from '@/components/ValueProps';
 import { HowItWorks } from '@/components/HowItWorks';
 import { CatalogSection } from '@/components/CatalogSection';
-import { CustomizerSection } from '@/components/CustomizerSection';
+// import { CustomizerSection } from '@/components/CustomizerSection'; // Interactive Mockup Studio: hidden until finished
 import { Footer } from '@/components/Footer';
 import { QuoteFormModal } from '@/components/QuoteFormModal';
 import { TrackStatusModal } from '@/components/TrackStatusModal';
@@ -44,8 +44,8 @@ export default function Home() {
         <HowItWorks onOpenQuote={() => handleOpenQuote()} />
         <CatalogSection onOpenQuote={handleOpenQuote} />
         
-        {/* Interactive Live Shirt Customizer & Mockup Previewer */}
-        <CustomizerSection onOpenQuote={handleOpenQuote} />
+        {/* Interactive Mockup Studio: hidden until finished, not ready to launch */}
+        {/* <CustomizerSection onOpenQuote={handleOpenQuote} /> */}
       </main>
 
       {/* Footer */}

@@ -25,7 +25,7 @@ const FALLBACK_PRODUCTS: Product[] = [
     colors: ['Black', 'White', 'Royal', 'Heavy Metal', 'Red'],
     estimated_days: 5,
     price_starting_at: 14.50,
-    image_url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=800',
+    image_url: '/images/bjj-championship-shirt.png',
     is_featured: true
   },
   {
@@ -41,7 +41,7 @@ const FALLBACK_PRODUCTS: Product[] = [
     colors: ['Black', 'White', 'Royal', 'Heavy Metal', 'Red'],
     estimated_days: 4,
     price_starting_at: 12.90,
-    image_url: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&q=80&w=800',
+    image_url: '/images/sports-custom-jersey.png',
     is_featured: true
   },
   {
@@ -57,13 +57,13 @@ const FALLBACK_PRODUCTS: Product[] = [
     colors: ['Black', 'Dark Heather', 'Navy'],
     estimated_days: 6,
     price_starting_at: 28.00,
-    image_url: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=800',
+    image_url: '/images/academy-coach.png',
     is_featured: true
   }
 ];
 
 export const CatalogSection: React.FC<CatalogSectionProps> = ({ onOpenQuote }) => {
-  const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,9 +82,12 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({ onOpenQuote }) =
         const { data } = await supabase.from('cs_products').select('*');
         if (data && data.length > 0) {
           setProducts(data);
+        } else {
+          setProducts(FALLBACK_PRODUCTS);
         }
       } catch (err) {
         console.error('Failed fetching products from Supabase:', err);
+        setProducts(FALLBACK_PRODUCTS);
       } finally {
         setLoading(false);
       }
