@@ -20,16 +20,17 @@ export const Footer: React.FC<FooterProps> = ({ onOpenQuote }) => {
               <span className="text-[13px] font-semibold uppercase tracking-[0.18em] text-accent leading-none">Studio</span>
             </div>
             <p className="text-[15px] text-ink-muted leading-relaxed max-w-xs">
-              A premium custom apparel studio serving sports teams, individuals, and businesses. No minimum order, fast turnaround, premium print quality.
+              A premium custom apparel studio dedicated to sports teams, Jiu-Jitsu academies, and athletic organizations. No minimum order, fast turnaround, premium print quality.
             </p>
           </div>
 
           <div className="space-y-4">
-            <h4 className="text-sm font-medium text-ink">Segments</h4>
+            <h4 className="text-sm font-medium text-ink">Sport Categories</h4>
             <ul className="space-y-3 text-[15px] text-ink-muted">
-              <li><Link href="/sports" className="hover:text-ink transition-colors">Sports</Link></li>
-              <li><Link href="/custom" className="hover:text-ink transition-colors">Custom</Link></li>
-              <li><Link href="/business" className="hover:text-ink transition-colors">Business</Link></li>
+              <li><Link href="/sports#sport-types" className="hover:text-ink transition-colors">Jiu-Jitsu Academies</Link></li>
+              <li><Link href="/sports#sport-types" className="hover:text-ink transition-colors">MMA & Fight Teams</Link></li>
+              <li><Link href="/sports#sport-types" className="hover:text-ink transition-colors">Wrestling & Combat</Link></li>
+              <li><Link href="/sports#sport-types" className="hover:text-ink transition-colors">CrossFit & Fitness</Link></li>
             </ul>
           </div>
 

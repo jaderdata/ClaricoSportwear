@@ -6,6 +6,7 @@ import { Footer } from '@/components/Footer';
 import { QuoteFormModal } from '@/components/QuoteFormModal';
 import { TrackStatusModal } from '@/components/TrackStatusModal';
 import { ValueProps } from '@/components/ValueProps';
+import { PartnerCarousel } from '@/components/PartnerCarousel';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Button } from '@/components/ui/Button';
@@ -26,15 +27,6 @@ const bjjCategories = [
   { label: 'Kids Team Apparel', desc: 'Junior program shirts that grow your academy identity.' },
   { label: 'Event Shirts', desc: 'Seminars, camps, and special event custom gear.' },
   { label: 'Supporter Shirts', desc: 'Fan and spectator apparel for tournaments and galas.' },
-];
-
-const academyLogos = [
-  { initials: 'GBA', name: 'Gracie Barra Academy' },
-  { initials: 'TCA', name: 'Triangle Choke Academy' },
-  { initials: 'LMA', name: 'Leverage MMA' },
-  { initials: 'BWA', name: 'Black Wolf Academy' },
-  { initials: 'FGA', name: 'Fight Game Gym' },
-  { initials: 'IBA', name: 'Iron Body Academy' },
 ];
 
 export default function SportsPageClient() {
@@ -129,24 +121,8 @@ export default function SportsPageClient() {
           </Container>
         </Section>
 
-        {/* ── TRUSTED ACADEMIES ── */}
-        <Section id="trusted-academies" border="top">
-          <Container>
-            <div className="max-w-2xl mb-14">
-              <p className="eyebrow mb-4">Trusted By Teams Across North America</p>
-              <h2 className="font-display text-h2 text-ink">Academy & fight team partners.</h2>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-10 pt-6 border-t border-border">
-              {academyLogos.map((academy) => (
-                <div key={academy.name} className="flex flex-col items-center text-center gap-2">
-                  <span className="text-sm font-semibold tracking-wide text-ink-muted">{academy.initials}</span>
-                  <span className="text-xs text-ink-faint leading-tight">{academy.name}</span>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </Section>
+        {/* ── TRUSTED ACADEMIES (DYNAMIC FROM ADMIN PANEL) ── */}
+        <PartnerCarousel />
 
         <ValueProps />
       </main>

@@ -15,14 +15,14 @@ const FALLBACK_PRODUCTS: Product[] = [
   {
     id: '1',
     created_at: new Date().toISOString(),
-    slug: 'gildan-3600-classic-academy-tee',
-    name: 'Classic Academy Custom Tee',
-    category: 'Academy Collection',
-    gildan_model: 'Gildan 3600',
+    slug: 'next-level-3600-adult-unisex-tee',
+    name: 'Adult Unisex Custom Tee',
+    category: 'Adult Collection',
+    gildan_model: 'Next Level 3600',
     print_technology: 'DTF Premium',
-    description: 'Ultra-durable classic crewneck shirt designed for everyday gym wear, coaching staff, and student apparel.',
-    fabric_details: '100% Ring Spun Cotton • 6.0 oz/yd²',
-    colors: ['Black', 'White', 'Navy Blue', 'Charcoal', 'Red'],
+    description: 'Ultra-durable unisex crewneck shirt designed for everyday gym wear, coaching staff, and student apparel. Sizes S–2XL.',
+    fabric_details: '100% Combed Ring-Spun Cotton • 4.3 oz/yd²',
+    colors: ['Black', 'White', 'Royal', 'Heavy Metal', 'Red'],
     estimated_days: 5,
     price_starting_at: 14.50,
     image_url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=800',
@@ -31,37 +31,21 @@ const FALLBACK_PRODUCTS: Product[] = [
   {
     id: '2',
     created_at: new Date().toISOString(),
-    slug: 'gildan-64000-softstyle-event-tee',
-    name: 'Softstyle Event & Tournament Tee',
-    category: 'Event Collection',
-    gildan_model: 'Gildan 64000 Softstyle',
+    slug: 'next-level-3310-youth-tee',
+    name: 'Youth Custom Tee',
+    category: 'Kids Collection',
+    gildan_model: 'Next Level 3310',
     print_technology: 'DTF Premium',
-    description: 'Lightweight, ultra-soft athletic fit ideal for event giveaways, spectator shirts, and tournament merch lines.',
-    fabric_details: '100% Preshrunk Ring-Spun Cotton • 4.5 oz/yd²',
-    colors: ['Black', 'Sport Grey', 'Royal Blue', 'Dark Heather'],
-    estimated_days: 3,
+    description: 'Soft combed cotton crewneck sized for young athletes, matching the adult academy kit. Sizes XS–XL.',
+    fabric_details: '100% Combed Ring-Spun Cotton Jersey • 4.3 oz/yd²',
+    colors: ['Black', 'White', 'Royal', 'Heavy Metal', 'Red'],
+    estimated_days: 4,
     price_starting_at: 12.90,
-    image_url: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800',
+    image_url: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&q=80&w=800',
     is_featured: true
   },
   {
     id: '3',
-    created_at: new Date().toISOString(),
-    slug: 'oversized-streetwear-academy-tee',
-    name: 'Heavyweight Oversized Street Tee',
-    category: 'Oversized',
-    gildan_model: 'Gildan 3600 Heavy',
-    print_technology: 'DTF Premium',
-    description: 'Modern relaxed drop-shoulder cut popular with competition teams and lifestyle sportswear collections.',
-    fabric_details: '100% Heavyweight Cotton • 7.5 oz/yd²',
-    colors: ['Washed Black', 'Bone White', 'Olive Green'],
-    estimated_days: 5,
-    price_starting_at: 18.00,
-    image_url: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&q=80&w=800',
-    is_featured: true
-  },
-  {
-    id: '4',
     created_at: new Date().toISOString(),
     slug: 'custom-academy-heavy-fleece-hoodie',
     name: 'Heavyweight Academy Pullover Hoodie',
@@ -86,11 +70,7 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({ onOpenQuote }) =
 
   const categories = [
     'All',
-    'Academy Collection',
-    'Event Collection',
-    'Oversized',
-    'Competition Shirts',
-    'Women\'s Collection',
+    'Adult Collection',
     'Kids Collection',
     'Hoodies',
     'Accessories'
@@ -158,8 +138,17 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({ onOpenQuote }) =
                 <img
                   src={product.image_url}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+                  className={`w-full h-full object-cover group-hover:scale-[1.03] transition-all duration-500 ease-out ${
+                    product.back_image_url ? 'group-hover:opacity-0' : ''
+                  }`}
                 />
+                {product.back_image_url && (
+                  <img
+                    src={product.back_image_url}
+                    alt={`${product.name} back view`}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out"
+                  />
+                )}
               </div>
 
               <div className="mt-4 flex items-start justify-between gap-3">

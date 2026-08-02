@@ -19,6 +19,7 @@ export interface Product {
   estimated_days: number;
   price_starting_at: number;
   image_url: string;
+  back_image_url?: string;
   is_featured: boolean;
 }
 

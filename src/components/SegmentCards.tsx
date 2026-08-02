@@ -9,31 +9,31 @@ import { Section } from '@/components/ui/Section';
 export const SegmentCards: React.FC = () => {
   const segments = [
     {
-      id: 'sports',
-      href: '/sports',
-      tag: 'Sports',
-      headline: 'Built for the team.',
-      description: 'Custom apparel for Jiu-Jitsu academies, tournament teams, coaches, and events. Your identity, on the mat and off it.',
-      cta: 'Explore Sports',
+      id: 'academies',
+      href: '/sports#sport-types',
+      tag: 'Martial Arts & BJJ Academies',
+      headline: 'Academy Identity. On & off the mat.',
+      description: 'Custom apparel for Jiu-Jitsu schools, academies, coaches, and students. Elevate your school brand with no minimum order requirements.',
+      cta: 'Explore Academy Gear',
       image: '/images/bjj-championship-shirt.png',
     },
     {
-      id: 'custom',
-      href: '/custom',
-      tag: 'Custom',
-      headline: 'Your idea. Your shirt.',
-      description: 'Birthdays, reunions, gifts, personal projects — turn any idea into premium apparel. One piece or one hundred.',
-      cta: 'Create Something',
+      id: 'tournaments',
+      href: '/sports#sport-types',
+      tag: 'Tournaments & Events',
+      headline: 'Built for championship weekend.',
+      description: 'Competition tees, seminar apparel, fight team uniforms, and event merch. High-definition DTF printing that stands out on the podium.',
+      cta: 'Explore Tournament Apparel',
       image: '/images/custom-music-tshirt.jpg',
     },
     {
-      id: 'business',
-      href: '/business',
-      tag: 'Business',
-      headline: 'Your team. Your brand.',
-      description: 'Professional apparel and uniforms for restaurants, contractors, gyms, and retail teams that want to look the part.',
-      cta: 'Build Your Team',
-      image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&q=80&w=1600',
+      id: 'gyms',
+      href: '/sports#sport-types',
+      tag: 'Gyms & Athletic Merch',
+      headline: 'Coach, staff & member apparel.',
+      description: 'Premium streetwear tees, hoodies, and activewear for CrossFit boxes, MMA gyms, and fitness clubs looking to launch signature merch lines.',
+      cta: 'Explore Gym Collections',
+      image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=1600',
     },
   ];
 
@@ -41,8 +41,8 @@ export const SegmentCards: React.FC = () => {
     <Section id="segment-cards" border="top">
       <Container>
         <div className="max-w-2xl mb-16 sm:mb-20">
-          <p className="eyebrow mb-4">One Platform. Three Audiences.</p>
-          <h2 className="font-display text-h1 text-ink">What are you creating?</h2>
+          <p className="eyebrow mb-4">Sports Specializations</p>
+          <h2 className="font-display text-h1 text-ink">Built for every level of competition.</h2>
         </div>
 
         <div className="space-y-20 sm:space-y-28">
@@ -76,7 +76,7 @@ export const SegmentCards: React.FC = () => {
             { label: 'Fast Turnaround', sub: '3–5 business days' },
             { label: 'No Minimum', sub: 'Order 1 or 1,000' },
             { label: 'Fully Custom', sub: 'Your design, your way' },
-            { label: 'Premium Quality', sub: 'Gildan + DTF printing' },
+            { label: 'Premium Quality', sub: 'Next Level + DTF printing' },
           ].map((v) => (
             <div key={v.label}>
               <div className="text-[15px] font-medium text-ink">{v.label}</div>

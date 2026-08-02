@@ -59,7 +59,7 @@ export const TrackStatusModal: React.FC<TrackStatusModalProps> = ({
             quantity: 30,
             event_name: 'Academy Gym Merch',
             discount_code: 'WELCOME10',
-            notes: 'Classic Gildan 3600 tees with chest & back logo prints.',
+            notes: 'Classic Next Level 3600 tees with chest & back logo prints.',
             logo_urls: ['academy_crest.png'],
             status: 'under_review'
           });
@@ -201,7 +201,7 @@ export const TrackStatusModal: React.FC<TrackStatusModalProps> = ({
                         3. Approved for DTF Printing &amp; Dispatch
                       </h4>
                       <p className="text-sm text-ink-muted">
-                        Gildan garment blanks selected, DTF high-res printing triggered, and express shipping queued.
+                        Next Level garment blanks selected, DTF high-res printing triggered, and express shipping queued.
                       </p>
                     </div>
                   </div>

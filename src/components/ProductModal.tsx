@@ -16,16 +16,47 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   onClose,
   onSelectProductForQuote,
 }) => {
+  const [activeView, setActiveView] = React.useState<'front' | 'back'>('front');
+
+  React.useEffect(() => {
+    setActiveView('front');
+  }, [product]);
+
+  const currentImageUrl = activeView === 'back' && product?.back_image_url ? product.back_image_url : product?.image_url;
+
   return (
     <Modal isOpen={!!product} onClose={onClose} maxWidth="max-w-4xl" ariaLabel="Product details">
       {product && (
         <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="relative aspect-square md:aspect-auto bg-paper">
+          <div className="relative aspect-square md:aspect-auto bg-paper flex flex-col justify-between">
             <img
-              src={product.image_url}
+              src={currentImageUrl}
               alt={product.name}
-              className="w-full h-full object-cover md:rounded-l-panel"
+              className="w-full h-full object-cover md:rounded-l-panel transition-opacity duration-300"
             />
+
+            {product.back_image_url && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 p-1 rounded-full bg-paper/90 backdrop-blur-xs border border-border shadow-md z-10">
+                <button
+                  type="button"
+                  onClick={() => setActiveView('front')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                    activeView === 'front' ? 'bg-ink text-paper' : 'text-ink-muted hover:text-ink'
+                  }`}
+                >
+                  Frente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveView('back')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                    activeView === 'back' ? 'bg-ink text-paper' : 'text-ink-muted hover:text-ink'
+                  }`}
+                >
+                  Costas
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="p-6 sm:p-10 flex flex-col justify-between gap-8">

@@ -24,7 +24,7 @@ export const ValueProps: React.FC = () => {
     {
       num: '04',
       title: 'Premium quality.',
-      description: 'Gildan 3600 and 64000 Softstyle blanks, printed with high-definition DTF for vivid, durable detail that holds up wash after wash.',
+      description: 'Next Level 3600 (adult) and 3310 (youth) blanks, printed with high-definition DTF for vivid, durable detail that holds up wash after wash.',
     },
   ];
 

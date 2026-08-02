@@ -284,34 +284,13 @@ export const QuoteFormModal: React.FC<QuoteFormModalProps> = ({
         </div>
       ) : (
         <div className="p-6 sm:p-10">
-          <div className="flex items-center gap-1 mb-6 border-b border-border pb-4">
-            {(['SPORTS', 'CUSTOM', 'BUSINESS'] as Segment[]).map((seg) => {
-              const cfg = SEGMENT_CONFIG[seg];
-              const isActive = activeSegment === seg;
-              return (
-                <button
-                  key={seg}
-                  type="button"
-                  onClick={() => setActiveSegment(seg)}
-                  className={`px-3 py-1.5 rounded-control text-sm transition-colors cursor-pointer ${
-                    isActive ? 'text-ink font-medium bg-accent-soft' : 'text-ink-muted hover:text-ink'
-                  }`}
-                >
-                  {cfg.label}
-                </button>
-              );
-            })}
-          </div>
-
           <div className="mb-6">
-            <p className="eyebrow mb-2">Custom Quote Request</p>
+            <p className="eyebrow mb-2">Sports Quote Request</p>
             <h2 className="font-display text-h2 text-ink">
-              {activeSegment === 'SPORTS' ? 'Create Your Gym Line' :
-               activeSegment === 'CUSTOM' ? 'Create Your Custom Shirt' :
-               'Create Your Business Apparel'}
+              Create Your Academy & Team Line
             </h2>
             <p className="text-[15px] text-ink-muted mt-2">
-              Fill out your details and upload your design. No minimum order required.
+              Fill out your academy details and upload your logo files. No minimum order required.
             </p>
           </div>
 

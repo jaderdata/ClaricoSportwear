@@ -60,7 +60,7 @@ describe('QuoteFormModal Component', () => {
 
   it('should render form fields correctly when isOpen is true', () => {
     render(<QuoteFormModal isOpen={true} onClose={() => {}} />);
-    expect(screen.getByText(/Create Your Gym Line/i)).toBeInTheDocument();
+    expect(screen.getByText(/Create Your Academy & Team Line/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\., Prof\. Rafael Silva/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\., Gracie Barra Downtown/i)).toBeInTheDocument();
   });

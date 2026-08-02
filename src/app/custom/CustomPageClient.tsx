@@ -24,7 +24,7 @@ const orderSteps = [
   {
     number: '01',
     title: 'Choose your apparel',
-    desc: 'Select your shirt style, fabric, and color. Classic tees, soft-styles, hoodies — all premium Gildan blanks.',
+    desc: 'Select your shirt style, fabric, and color. Next Level 3600 adult or 3310 youth tees, plus fleece hoodies.',
   },
   {
     number: '02',

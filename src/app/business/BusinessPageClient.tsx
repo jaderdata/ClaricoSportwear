@@ -42,7 +42,7 @@ const valuePoints = [
   },
   {
     title: 'Professional quality',
-    desc: 'Gildan blank garments combined with DTF printing that doesn\'t crack, peel, or fade — even through heavy commercial washing.',
+    desc: 'Next Level blank garments combined with DTF printing that doesn\'t crack, peel, or fade — even through heavy commercial washing.',
   },
   {
     title: 'Fast business turnaround',

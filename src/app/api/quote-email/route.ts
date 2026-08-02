@@ -98,7 +98,7 @@ export async function POST(request: Request) {
           </div>
 
           <div class="footer">
-            © ${new Date().getFullYear()} Clarico Studio. Official Gildan Partner • High-Res DTF Printing.<br/>
+            © ${new Date().getFullYear()} Clarico Studio. Next Level Blanks • High-Res DTF Printing.<br/>
             You can track your order live anytime on our platform using protocol <strong>${protocol}</strong>.
           </div>
         </div>

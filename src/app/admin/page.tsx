@@ -18,7 +18,7 @@ const MOCK_QUOTES: QuoteRequest[] = [
     quantity: 45,
     event_name: 'State Championship 2026',
     discount_code: 'WELCOME10',
-    notes: 'Need 30 Gildan 3600 tees with gold back printing and 15 hoodies with academy chest crest.',
+    notes: 'Need 30 Next Level 3600 tees with gold back printing and 15 hoodies with academy chest crest.',
     logo_urls: ['gb_downtown_logo_vector.ai', 'sponsor_banner.pdf'],
     status: 'pending'
   },
@@ -33,7 +33,7 @@ const MOCK_QUOTES: QuoteRequest[] = [
     quantity: 120,
     event_name: 'Summer Seminar Series',
     discount_code: 'WELCOME10',
-    notes: 'Softstyle event shirts for tournament spectator giveaway.',
+    notes: 'Next Level 3600 event shirts for tournament spectator giveaway.',
     logo_urls: ['alliance_shield_hd.png'],
     status: 'under_review'
   },
@@ -48,7 +48,7 @@ const MOCK_QUOTES: QuoteRequest[] = [
     quantity: 25,
     event_name: 'Women BJJ Camp',
     discount_code: undefined,
-    notes: 'Tailored womens athletic softstyle tees in black and white.',
+    notes: 'Next Level 3600 tees for the women\'s squad in black and white.',
     logo_urls: ['atos_womens_team.eps'],
     status: 'approved'
   }
@@ -58,14 +58,14 @@ const FALLBACK_PRODUCTS: Product[] = [
   {
     id: '1',
     created_at: new Date().toISOString(),
-    slug: 'gildan-3600-classic-academy-tee',
-    name: 'Classic Academy Custom Tee',
-    category: 'Academy Collection',
-    gildan_model: 'Gildan 3600',
+    slug: 'next-level-3600-adult-unisex-tee',
+    name: 'Adult Unisex Custom Tee',
+    category: 'Adult Collection',
+    gildan_model: 'Next Level 3600',
     print_technology: 'DTF Premium',
-    description: 'Ultra-durable classic crewneck shirt designed for everyday gym wear, coaching staff, and student apparel.',
-    fabric_details: '100% Ring Spun Cotton • 6.0 oz/yd²',
-    colors: ['Black', 'White', 'Navy Blue', 'Charcoal', 'Red'],
+    description: 'Ultra-durable unisex crewneck shirt designed for everyday gym wear, coaching staff, and student apparel. Sizes S–2XL.',
+    fabric_details: '100% Combed Ring-Spun Cotton • 4.3 oz/yd²',
+    colors: ['Black', 'White', 'Royal', 'Heavy Metal', 'Red'],
     estimated_days: 5,
     price_starting_at: 14.50,
     image_url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=800',
@@ -74,17 +74,17 @@ const FALLBACK_PRODUCTS: Product[] = [
   {
     id: '2',
     created_at: new Date().toISOString(),
-    slug: 'gildan-64000-softstyle-event-tee',
-    name: 'Softstyle Event & Tournament Tee',
-    category: 'Event Collection',
-    gildan_model: 'Gildan 64000 Softstyle',
+    slug: 'next-level-3310-youth-tee',
+    name: 'Youth Custom Tee',
+    category: 'Kids Collection',
+    gildan_model: 'Next Level 3310',
     print_technology: 'DTF Premium',
-    description: 'Lightweight, ultra-soft athletic fit ideal for event giveaways, spectator shirts, and tournament merch lines.',
-    fabric_details: '100% Preshrunk Ring-Spun Cotton • 4.5 oz/yd²',
-    colors: ['Black', 'Sport Grey', 'Royal Blue', 'Dark Heather'],
-    estimated_days: 3,
+    description: 'Soft combed cotton crewneck sized for young athletes, matching the adult academy kit. Sizes XS–XL.',
+    fabric_details: '100% Combed Ring-Spun Cotton Jersey • 4.3 oz/yd²',
+    colors: ['Black', 'White', 'Royal', 'Heavy Metal', 'Red'],
+    estimated_days: 4,
     price_starting_at: 12.90,
-    image_url: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800',
+    image_url: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&q=80&w=800',
     is_featured: true
   }
 ];
@@ -222,19 +222,22 @@ export default function AdminDashboard() {
   const [addProductModalOpen, setAddProductModalOpen] = useState<boolean>(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [newProdName, setNewProdName] = useState('');
-  const [newProdCategory, setNewProdCategory] = useState('Academy Collection');
-  const [newProdGildan, setNewProdGildan] = useState('Gildan 3600');
+  const [newProdCategory, setNewProdCategory] = useState('Adult Collection');
+  const [newProdGildan, setNewProdGildan] = useState('Next Level 3600');
   const [newProdPrice, setNewProdPrice] = useState('14.50');
   const [newProdDays, setNewProdDays] = useState('5');
   const [newProdImage, setNewProdImage] = useState('');
+  const [newProdBackImage, setNewProdBackImage] = useState('');
   const [newProdDesc, setNewProdDesc] = useState('');
-  const [newProdColors, setNewProdColors] = useState('Black, White, Navy Blue, Red');
+  const [newProdColors, setNewProdColors] = useState('Black, White, Royal, Heavy Metal, Red');
   const [newProdFeatured, setNewProdFeatured] = useState(false);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [productError, setProductError] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState('');
+  const [isUploadingBackImage, setIsUploadingBackImage] = useState(false);
+  const [backImageUploadError, setBackImageUploadError] = useState('');
 
   const fetchQuotes = async () => {
     setLoading(true);
@@ -296,15 +299,17 @@ export default function AdminDashboard() {
   const resetProductForm = () => {
     setEditingProductId(null);
     setNewProdName('');
-    setNewProdCategory('Academy Collection');
-    setNewProdGildan('Gildan 3600');
+    setNewProdCategory('Adult Collection');
+    setNewProdGildan('Next Level 3600');
     setNewProdPrice('14.50');
     setNewProdDays('5');
     setNewProdImage('');
+    setNewProdBackImage('');
     setNewProdDesc('');
-    setNewProdColors('Black, White, Navy Blue, Red');
+    setNewProdColors('Black, White, Royal, Heavy Metal, Red');
     setNewProdFeatured(false);
     setImageUploadError('');
+    setBackImageUploadError('');
   };
 
   const openAddProductModal = () => {
@@ -321,10 +326,13 @@ export default function AdminDashboard() {
     setNewProdPrice(String(prod.price_starting_at));
     setNewProdDays(String(prod.estimated_days));
     setNewProdImage(prod.image_url);
+    setNewProdBackImage(prod.back_image_url || '');
     setNewProdDesc(prod.description);
     setNewProdColors(prod.colors.join(', '));
     setNewProdFeatured(prod.is_featured);
     setProductError('');
+    setImageUploadError('');
+    setBackImageUploadError('');
     setAddProductModalOpen(true);
   };
 
@@ -337,7 +345,7 @@ export default function AdminDashboard() {
     setIsUploadingImage(true);
 
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storagePath = `${Date.now()}_${cleanFileName}`;
+    const storagePath = `front_${Date.now()}_${cleanFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('product-images')
@@ -352,6 +360,32 @@ export default function AdminDashboard() {
     const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(storagePath);
     setNewProdImage(publicUrlData.publicUrl);
     setIsUploadingImage(false);
+  };
+
+  const handleBackImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setBackImageUploadError('');
+    setIsUploadingBackImage(true);
+
+    const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `back_${Date.now()}_${cleanFileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(storagePath, file, { cacheControl: '3600', upsert: false });
+
+    if (uploadError) {
+      setIsUploadingBackImage(false);
+      setBackImageUploadError(uploadError.message);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(storagePath);
+    setNewProdBackImage(publicUrlData.publicUrl);
+    setIsUploadingBackImage(false);
   };
 
   // Add / Edit Product Handler
@@ -411,6 +445,7 @@ export default function AdminDashboard() {
       estimated_days: Number(newProdDays),
       price_starting_at: Number(newProdPrice),
       image_url: newProdImage,
+      back_image_url: newProdBackImage || null,
       is_featured: newProdFeatured
     };
 
@@ -738,7 +773,7 @@ export default function AdminDashboard() {
               <div>
                 <span className="text-xs font-extrabold uppercase tracking-[0.2em] text-red-500 block mb-1">Live Catalog Control</span>
                 <h2 className="text-2xl font-black text-white uppercase tracking-tight">Apparel & Product Manager</h2>
-                <p className="text-xs text-slate-400 mt-1">Manage Gildan blank tees, starting prices, estimated days, and featured items.</p>
+                <p className="text-xs text-slate-400 mt-1">Manage Next Level blank tees, starting prices, estimated days, and featured items.</p>
               </div>
               <button
                 onClick={openAddProductModal}
@@ -970,24 +1005,20 @@ export default function AdminDashboard() {
                     onChange={e => setNewProdCategory(e.target.value)}
                     className="w-full touch-target px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs"
                   >
-                    <option value="Academy Collection">Academy Collection</option>
-                    <option value="Event Collection">Event Collection</option>
-                    <option value="Oversized">Oversized</option>
-                    <option value="Competition Shirts">Competition Shirts</option>
-                    <option value="Women's Collection">Women&apos;s Collection</option>
+                    <option value="Adult Collection">Adult Collection</option>
                     <option value="Kids Collection">Kids Collection</option>
                     <option value="Hoodies">Hoodies</option>
                     <option value="Accessories">Accessories</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-300 uppercase mb-1">Gildan / Blank Model</label>
+                  <label className="block font-bold text-slate-300 uppercase mb-1">Garment Model</label>
                   <input
                     type="text"
                     required
                     value={newProdGildan}
                     onChange={e => setNewProdGildan(e.target.value)}
-                    placeholder="Gildan 3600"
+                    placeholder="Next Level 3600"
                     className="w-full touch-target px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs"
                   />
                 </div>
@@ -1017,34 +1048,71 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-300 uppercase mb-1">Product Image *</label>
-                <div className="flex items-center gap-4">
-                  {newProdImage && (
-                    <img
-                      src={newProdImage}
-                      alt="Product preview"
-                      className="w-16 h-16 rounded-xl object-cover border border-slate-800 shrink-0"
-                    />
+              {/* Front and Back Product Images (Front Mandatory, Back Optional) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-300 uppercase mb-1">
+                    Foto da Frente <span className="text-red-500">* (Obrigatório)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    {newProdImage && (
+                      <img
+                        src={newProdImage}
+                        alt="Front preview"
+                        className="w-14 h-14 rounded-xl object-cover border border-slate-800 shrink-0"
+                      />
+                    )}
+                    <div className="border border-dashed border-slate-700 hover:border-red-500 rounded-xl px-3 py-2.5 text-center transition-colors cursor-pointer flex-1 bg-slate-900/50">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageFileChange}
+                        className="hidden"
+                        id="product-front-image-input"
+                      />
+                      <label htmlFor="product-front-image-input" className="cursor-pointer block text-slate-300 text-xs">
+                        {isUploadingImage ? 'Enviando…' : newProdImage ? 'Substituir Foto' : '📁 Selecionar Foto Frente'}
+                      </label>
+                    </div>
+                  </div>
+                  {imageUploadError && (
+                    <div className="mt-1.5 p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] font-semibold">
+                      {imageUploadError}
+                    </div>
                   )}
-                  <div className="border border-dashed border-slate-700 hover:border-red-500 rounded-xl px-4 py-3 text-center transition-colors cursor-pointer flex-1">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageFileChange}
-                      className="hidden"
-                      id="product-image-input"
-                    />
-                    <label htmlFor="product-image-input" className="cursor-pointer block text-slate-300">
-                      {isUploadingImage ? 'Uploading…' : newProdImage ? 'Replace image' : 'Click to upload an image'}
-                    </label>
-                  </div>
                 </div>
-                {imageUploadError && (
-                  <div className="mt-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold">
-                    {imageUploadError}
+
+                <div>
+                  <label className="block font-bold text-slate-300 uppercase mb-1">
+                    Foto das Costas <span className="text-slate-500 font-normal">(Opcional)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    {newProdBackImage && (
+                      <img
+                        src={newProdBackImage}
+                        alt="Back preview"
+                        className="w-14 h-14 rounded-xl object-cover border border-slate-800 shrink-0"
+                      />
+                    )}
+                    <div className="border border-dashed border-slate-700 hover:border-red-500 rounded-xl px-3 py-2.5 text-center transition-colors cursor-pointer flex-1 bg-slate-900/50">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleBackImageFileChange}
+                        className="hidden"
+                        id="product-back-image-input"
+                      />
+                      <label htmlFor="product-back-image-input" className="cursor-pointer block text-slate-300 text-xs">
+                        {isUploadingBackImage ? 'Enviando…' : newProdBackImage ? 'Substituir Foto' : '📁 Selecionar Foto Costas'}
+                      </label>
+                    </div>
                   </div>
-                )}
+                  {backImageUploadError && (
+                    <div className="mt-1.5 p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] font-semibold">
+                      {backImageUploadError}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>

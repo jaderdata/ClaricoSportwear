@@ -3,7 +3,7 @@ import SportsPageClient from './SportsPageClient';
 
 export const metadata: Metadata = {
   title: 'Sports Apparel | Jiu-Jitsu, MMA & Team Apparel',
-  description: 'Custom premium apparel for Jiu-Jitsu academies, MMA gyms, wrestling teams, and sporting events. No minimum order, fast turnaround, Gildan + DTF printing.',
+  description: 'Custom premium apparel for Jiu-Jitsu academies, MMA gyms, wrestling teams, and sporting events. No minimum order, fast turnaround, Next Level blanks + DTF printing.',
   alternates: { canonical: '/sports' },
   openGraph: {
     title: 'Sports Apparel | Clarico Studio',

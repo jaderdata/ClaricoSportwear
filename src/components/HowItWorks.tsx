@@ -14,7 +14,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onOpenQuote }) => {
     {
       number: '01',
       title: 'Choose your style',
-      description: 'Classic Gildan 3600 heavy cotton, 64000 Softstyle, oversized street tees, or competition dry-fits.',
+      description: 'Next Level 3600 adult unisex tee (S–2XL) or Next Level 3310 youth tee (XS–XL), in five core colors.',
     },
     {
       number: '02',

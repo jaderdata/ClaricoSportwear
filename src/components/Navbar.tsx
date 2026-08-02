@@ -26,8 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuote, onOpenTrack }) => {
 
   const navLinks = [
     { href: '/sports', label: 'Sports' },
-    { href: '/custom', label: 'Custom' },
-    { href: '/business', label: 'Business' },
+    { href: '/sports#sport-types', label: 'Academies & Sports' },
     { href: '/#collections', label: 'Catalog' },
     { href: '/#how-it-works', label: 'How It Works' },
   ];

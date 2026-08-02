@@ -21,15 +21,15 @@ export const metadata: Metadata = {
     default: "Clarico Studio | Premium Custom Apparel",
     template: "%s | Clarico Studio"
   },
-  description: "Premium custom apparel for sports teams, individuals, and businesses. No minimum order, Gildan 3600 & 64000 Softstyle blanks, high-definition DTF printing, and fast 3-5 day turnaround.",
+  description: "Premium custom sports apparel for Jiu-Jitsu academies, fight teams, and sports events. No minimum order, Next Level 3600 adult & 3310 youth blanks, high-definition DTF printing, and fast 3-5 day turnaround.",
   keywords: [
     "custom apparel studio",
     "Jiu-Jitsu custom shirts",
     "BJJ team apparel",
     "business uniforms custom",
     "no minimum custom shirts",
-    "Gildan 3600 custom print",
-    "Gildan 64000 Softstyle",
+    "Next Level 3600 custom print",
+    "Next Level 3310 youth tee",
     "DTF printing fast turnaround",
     "custom team apparel",
     "personalized t-shirts no minimum",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Clarico Studio | Premium Custom Apparel",
-    description: "Premium custom apparel for sports teams, individuals, and businesses. No minimum order, fast turnaround, Gildan blanks and DTF printing.",
+    description: "Premium custom apparel for sports teams, individuals, and businesses. No minimum order, fast turnaround, Next Level blanks and DTF printing.",
     url: "https://claricostudio.com",
     siteName: "Clarico Studio",
     images: [
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Clarico Studio | Premium Custom Apparel",
-    description: "Custom apparel for teams, individuals, and businesses. No minimum, fast turnaround, premium Gildan + DTF.",
+    description: "Custom apparel for teams, individuals, and businesses. No minimum, fast turnaround, premium Next Level + DTF.",
     images: ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=1200"],
   },
   robots: {
@@ -100,7 +100,7 @@ export default function RootLayout({
     "name": "Clarico Studio",
     "url": "https://claricostudio.com",
     "logo": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=400",
-    "description": "Premium custom apparel studio for sports teams, individuals, and businesses. No minimum order, Gildan quality, fast DTF printing.",
+    "description": "Premium custom apparel studio for sports teams, individuals, and businesses. No minimum order, Next Level quality, fast DTF printing.",
     "contactPoint": {
       "@type": "ContactPoint",
       "telephone": "+1-800-555-0199",
@@ -130,7 +130,7 @@ export default function RootLayout({
         "name": "What blank shirt models and printing methods are used?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "We use official Gildan 3600 Classic Ring-Spun Cotton and Gildan 64000 Softstyle tees printed with high-definition Direct-to-Film (DTF) technology for crisp, vibrant, durable prints."
+          "text": "We use Next Level 3600 (adult, sizes S–2XL) and Next Level 3310 (youth, sizes XS–XL) combed ring-spun cotton tees, printed with high-definition Direct-to-Film (DTF) technology for crisp, vibrant, durable prints."
         }
       },
       {
