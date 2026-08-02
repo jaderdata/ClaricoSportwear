@@ -1,0 +1,165 @@
+'use client';
+
+import React, { useState } from 'react';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
+import { QuoteFormModal } from '@/components/QuoteFormModal';
+import { TrackStatusModal } from '@/components/TrackStatusModal';
+import { ValueProps } from '@/components/ValueProps';
+import { Container } from '@/components/ui/Container';
+import { Section } from '@/components/ui/Section';
+import { Button } from '@/components/ui/Button';
+
+const sportCategories = [
+  { name: 'Jiu-Jitsu', sub: 'Academies · Tournaments · Team Gear', primary: true },
+  { name: 'MMA', sub: 'Fight Teams · Gym Merch', primary: false },
+  { name: 'Wrestling', sub: 'Team Shirts · Competition Apparel', primary: false },
+  { name: 'Muay Thai', sub: 'Gym Apparel · Event Shirts', primary: false },
+  { name: 'CrossFit', sub: 'Box Apparel · Competition Wear', primary: false },
+  { name: 'Fitness', sub: 'Gym Shirts · Coach Apparel', primary: false },
+];
+
+const bjjCategories = [
+  { label: 'Academy Shirts', desc: 'Represent your school every day on and off the mat.' },
+  { label: 'Tournament Shirts', desc: 'Custom competition tees for teams competing at events.' },
+  { label: 'Coach Apparel', desc: 'Premium staff shirts that carry your academy brand.' },
+  { label: 'Kids Team Apparel', desc: 'Junior program shirts that grow your academy identity.' },
+  { label: 'Event Shirts', desc: 'Seminars, camps, and special event custom gear.' },
+  { label: 'Supporter Shirts', desc: 'Fan and spectator apparel for tournaments and galas.' },
+];
+
+const academyLogos = [
+  { initials: 'GBA', name: 'Gracie Barra Academy' },
+  { initials: 'TCA', name: 'Triangle Choke Academy' },
+  { initials: 'LMA', name: 'Leverage MMA' },
+  { initials: 'BWA', name: 'Black Wolf Academy' },
+  { initials: 'FGA', name: 'Fight Game Gym' },
+  { initials: 'IBA', name: 'Iron Body Academy' },
+];
+
+export default function SportsPageClient() {
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [trackModalOpen, setTrackModalOpen] = useState(false);
+
+  const handleOpenQuote = () => setQuoteModalOpen(true);
+
+  return (
+    <div className="min-h-screen bg-paper text-ink flex flex-col">
+      <Navbar onOpenQuote={handleOpenQuote} onOpenTrack={() => setTrackModalOpen(true)} />
+
+      <main className="grow">
+        {/* ── HERO ── */}
+        <section className="relative min-h-[88vh] flex items-end overflow-hidden bg-ink">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=2400')` }}
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-ink/90 via-ink/25 to-ink/10" />
+
+          <Container className="relative z-10 pb-16 sm:pb-24 pt-40">
+            <div className="max-w-3xl animate-reveal">
+              <p className="eyebrow text-paper/60 mb-6">Sports — Flagship Segment</p>
+              <h1 className="font-display text-display-xl text-paper mb-6">
+                Your Team.
+                <br />
+                Your Identity.
+              </h1>
+              <p className="text-body-lg text-paper/75 max-w-xl mb-10 leading-relaxed">
+                Premium custom apparel for academies, teams, athletes, and events. Jiu-Jitsu is our home ground — but we build for every competitor.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button onClick={handleOpenQuote} size="lg" withArrow>
+                  Create Your Team Shirt
+                </Button>
+                <Button href="#sport-types" variant="secondary" size="lg" className="border-paper/30! text-paper! hover:border-paper!">
+                  Explore Sports Designs
+                </Button>
+              </div>
+            </div>
+          </Container>
+        </section>
+
+        {/* ── SPORT TYPES ── */}
+        <Section id="sport-types" border="top">
+          <Container>
+            <div className="max-w-2xl mb-14">
+              <p className="eyebrow mb-4">Sport Categories</p>
+              <h2 className="font-display text-h1 text-ink">We build for every competitor.</h2>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-10 pt-6 border-t border-border">
+              {sportCategories.map((sport) => (
+                <div key={sport.name}>
+                  <p className={`text-[15px] ${sport.primary ? 'text-accent font-semibold' : 'text-ink font-medium'}`}>
+                    {sport.name}
+                  </p>
+                  <p className="text-sm text-ink-muted mt-1 leading-snug">{sport.sub}</p>
+                </div>
+              ))}
+            </div>
+          </Container>
+        </Section>
+
+        {/* ── BJJ PRODUCT CATEGORIES ── */}
+        <Section border="top">
+          <Container>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+              <div>
+                <p className="eyebrow mb-4">Jiu-Jitsu Specialization</p>
+                <h2 className="font-display text-h2 text-ink mb-6 leading-tight">
+                  Custom apparel built for the academy experience.
+                </h2>
+                <p className="text-body text-ink-muted leading-relaxed mb-8 max-w-md">
+                  We understand the Jiu-Jitsu community. From a small academy ordering 5 shirts for a seminar to a gym network ordering 300+ pieces for a tournament — we scale with you, with no minimum ever required.
+                </p>
+                <Button onClick={handleOpenQuote} withArrow>
+                  Start Your Academy Order
+                </Button>
+              </div>
+
+              <div className="border-t border-border">
+                {bjjCategories.map((cat) => (
+                  <div key={cat.label} className="py-5 border-b border-border">
+                    <h3 className="text-[15px] font-medium text-ink">{cat.label}</h3>
+                    <p className="text-sm text-ink-muted mt-1">{cat.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Container>
+        </Section>
+
+        {/* ── TRUSTED ACADEMIES ── */}
+        <Section id="trusted-academies" border="top">
+          <Container>
+            <div className="max-w-2xl mb-14">
+              <p className="eyebrow mb-4">Trusted By Teams Across North America</p>
+              <h2 className="font-display text-h2 text-ink">Academy & fight team partners.</h2>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-10 pt-6 border-t border-border">
+              {academyLogos.map((academy) => (
+                <div key={academy.name} className="flex flex-col items-center text-center gap-2">
+                  <span className="text-sm font-semibold tracking-wide text-ink-muted">{academy.initials}</span>
+                  <span className="text-xs text-ink-faint leading-tight">{academy.name}</span>
+                </div>
+              ))}
+            </div>
+          </Container>
+        </Section>
+
+        <ValueProps />
+      </main>
+
+      <Footer onOpenQuote={handleOpenQuote} />
+
+      <QuoteFormModal
+        isOpen={quoteModalOpen}
+        onClose={() => setQuoteModalOpen(false)}
+        initialProductName="Sports Team Custom Shirt"
+      />
+
+      <TrackStatusModal isOpen={trackModalOpen} onClose={() => setTrackModalOpen(false)} />
+    </div>
+  );
+}
