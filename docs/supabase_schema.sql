@@ -71,8 +71,12 @@ CREATE TABLE IF NOT EXISTS public.cs_products (
     estimated_days INTEGER NOT NULL DEFAULT 5,
     price_starting_at NUMERIC(10,2) NOT NULL,
     image_url TEXT NOT NULL,
+    back_image_url TEXT,
     is_featured BOOLEAN NOT NULL DEFAULT false
 );
+
+-- Migration: add back_image_url to existing cs_products tables created before this column existed
+ALTER TABLE public.cs_products ADD COLUMN IF NOT EXISTS back_image_url TEXT;
 
 ALTER TABLE public.cs_products ENABLE ROW LEVEL SECURITY;
 
