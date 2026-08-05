@@ -44,7 +44,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     activeView === 'front' ? 'bg-ink text-paper' : 'text-ink-muted hover:text-ink'
                   }`}
                 >
-                  Frente
+                  Front
                 </button>
                 <button
                   type="button"
@@ -53,7 +53,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     activeView === 'back' ? 'bg-ink text-paper' : 'text-ink-muted hover:text-ink'
                   }`}
                 >
-                  Costas
+                  Back
                 </button>
               </div>
             )}

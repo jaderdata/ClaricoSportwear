@@ -169,7 +169,7 @@ export default function AdminDashboardClient() {
   const isSampleAcademy = (id: string) => DEFAULT_PARTNER_ACADEMIES.some(a => a.id === id);
 
   const handleDeleteAcademy = async (id: string) => {
-    if (!confirm('Tem certeza que deseja remover esta academia parceira?')) return;
+    if (!confirm('Are you sure you want to remove this partner academy?')) return;
     setAcademyDeleteError('');
 
     if (isSampleAcademy(id)) {
@@ -191,7 +191,7 @@ export default function AdminDashboardClient() {
     e.preventDefault();
     if (isSavingAcademy) return;
     if (!newAcadName.trim()) {
-      setAcademyError('Por favor insira o nome da academia.');
+      setAcademyError('Please enter the academy name.');
       return;
     }
 
@@ -912,20 +912,20 @@ export default function AdminDashboardClient() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
               <div>
-                <h2 className="text-xl font-extrabold text-white uppercase tracking-wide">Academias Parceiras ({academies.length})</h2>
-                <p className="text-xs text-slate-400 mt-1">Gerencie os nomes e logos das academias exibidas no carrossel da homepage do site.</p>
+                <h2 className="text-xl font-extrabold text-white uppercase tracking-wide">Partner Academies ({academies.length})</h2>
+                <p className="text-xs text-slate-400 mt-1">Manage partner academy names and logos displayed in the homepage carousel.</p>
               </div>
               <button
                 onClick={handleOpenAddAcademy}
                 className="touch-target px-5 py-2.5 rounded-xl bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
               >
-                + Adicionar Nova Academia
+                + Add New Academy
               </button>
             </div>
 
             {academyDeleteError && (
               <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold">
-                Falha ao excluir academia: {academyDeleteError}
+                Failed to delete academy: {academyDeleteError}
               </div>
             )}
 
@@ -942,7 +942,7 @@ export default function AdminDashboardClient() {
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-extrabold text-white text-base truncate">{acad.name}</h3>
-                      <p className="text-xs text-slate-400 truncate mt-0.5">{acad.subtitle || 'Parceiro Oficial'}</p>
+                      <p className="text-xs text-slate-400 truncate mt-0.5">{acad.subtitle || 'Official Partner'}</p>
                     </div>
                   </div>
 
@@ -951,13 +951,13 @@ export default function AdminDashboardClient() {
                       onClick={() => handleOpenEditAcademy(acad)}
                       className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
                     >
-                      Editar
+                      Edit
                     </button>
                     <button
                       onClick={() => handleDeleteAcademy(acad.id)}
                       className="px-3 py-1.5 rounded-lg bg-red-600/10 hover:bg-red-600/30 text-red-400 text-xs font-bold transition-colors cursor-pointer"
                     >
-                      Excluir
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -1124,7 +1124,7 @@ export default function AdminDashboardClient() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-slate-300 uppercase mb-1">
-                    Foto da Frente <span className="text-red-500">* (Obrigatório)</span>
+                    Front Photo <span className="text-red-500">* (Required)</span>
                   </label>
                   <div className="flex items-center gap-3">
                     {newProdImage && (
@@ -1143,7 +1143,7 @@ export default function AdminDashboardClient() {
                         id="product-front-image-input"
                       />
                       <label htmlFor="product-front-image-input" className="cursor-pointer block text-slate-300 text-xs">
-                        {isUploadingImage ? 'Enviando…' : newProdImage ? 'Substituir Foto' : '📁 Selecionar Foto Frente'}
+                        {isUploadingImage ? 'Uploading…' : newProdImage ? 'Replace Photo' : '📁 Select Front Photo'}
                       </label>
                     </div>
                   </div>
@@ -1156,7 +1156,7 @@ export default function AdminDashboardClient() {
 
                 <div>
                   <label className="block font-bold text-slate-300 uppercase mb-1">
-                    Foto das Costas <span className="text-slate-500 font-normal">(Opcional)</span>
+                    Back Photo <span className="text-slate-500 font-normal">(Optional)</span>
                   </label>
                   <div className="flex items-center gap-3">
                     {newProdBackImage && (
@@ -1175,7 +1175,7 @@ export default function AdminDashboardClient() {
                         id="product-back-image-input"
                       />
                       <label htmlFor="product-back-image-input" className="cursor-pointer block text-slate-300 text-xs">
-                        {isUploadingBackImage ? 'Enviando…' : newProdBackImage ? 'Substituir Foto' : '📁 Selecionar Foto Costas'}
+                        {isUploadingBackImage ? 'Uploading…' : newProdBackImage ? 'Replace Photo' : '📁 Select Back Photo'}
                       </label>
                     </div>
                   </div>
@@ -1248,7 +1248,7 @@ export default function AdminDashboardClient() {
           <div className="bg-[#0f111a] border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5 animate-reveal">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="font-extrabold text-white uppercase text-base tracking-wider">
-                {editingAcademyId ? 'Editar Academia Parceira' : 'Adicionar Academia Parceira'}
+                {editingAcademyId ? 'Edit Partner Academy' : 'Add Partner Academy'}
               </h3>
               <button
                 type="button"
@@ -1261,11 +1261,11 @@ export default function AdminDashboardClient() {
 
             <form onSubmit={handleSubmitAcademy} className="space-y-4">
               <div>
-                <label className="block font-bold text-slate-300 uppercase text-xs mb-1">Nome da Academia *</label>
+                <label className="block font-bold text-slate-300 uppercase text-xs mb-1">Academy Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ex: Gracie Barra, Alliance BJJ..."
+                  placeholder="e.g. Gracie Barra, Alliance BJJ..."
                   value={newAcadName}
                   onChange={(e) => setNewAcadName(e.target.value)}
                   className="w-full touch-target px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:border-red-500 outline-none"
@@ -1273,10 +1273,10 @@ export default function AdminDashboardClient() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-300 uppercase text-xs mb-1">Subtítulo / Descrição</label>
+                <label className="block font-bold text-slate-300 uppercase text-xs mb-1">Subtitle / Description</label>
                 <input
                   type="text"
-                  placeholder="Ex: Official Team Apparel, Tournament Merch..."
+                  placeholder="e.g. Official Team Apparel, Tournament Merch..."
                   value={newAcadSubtitle}
                   onChange={(e) => setNewAcadSubtitle(e.target.value)}
                   className="w-full touch-target px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:border-red-500 outline-none"
@@ -1284,11 +1284,11 @@ export default function AdminDashboardClient() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-300 uppercase text-xs mb-1">Sigla / Iniciais (opcional)</label>
+                <label className="block font-bold text-slate-300 uppercase text-xs mb-1">Initials / Abbreviation (optional)</label>
                 <input
                   type="text"
                   maxLength={4}
-                  placeholder="Ex: GB, ALL, ATOS..."
+                  placeholder="e.g. GB, ALL, ATOS..."
                   value={newAcadInitials}
                   onChange={(e) => setNewAcadInitials(e.target.value)}
                   className="w-full touch-target px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:border-red-500 outline-none"
@@ -1296,7 +1296,7 @@ export default function AdminDashboardClient() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-300 uppercase text-xs mb-1.5">Logo da Academia (Imagem)</label>
+                <label className="block font-bold text-slate-300 uppercase text-xs mb-1.5">Academy Logo (Image)</label>
 
                 {/* Computer File Upload Box */}
                 <div className="border-2 border-dashed border-slate-700 hover:border-red-500 rounded-xl p-4 text-center transition-colors bg-slate-900/60 mb-3">
@@ -1312,15 +1312,15 @@ export default function AdminDashboardClient() {
                       <div className="flex items-center justify-center gap-3">
                         <img src={newAcadLogo} alt="Preview" className="size-12 rounded-xl object-cover border border-slate-700 bg-black shrink-0" />
                         <div className="text-left">
-                          <span className="text-xs font-bold text-emerald-400 block">✓ Imagem Selecionada</span>
-                          <span className="text-[11px] text-slate-400">Clique para carregar outro arquivo do computador</span>
+                          <span className="text-xs font-bold text-emerald-400 block">✓ Image Selected</span>
+                          <span className="text-[11px] text-slate-400">Click to upload another file from computer</span>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-1 py-1">
                         <div className="text-2xl">📁</div>
-                        <span className="text-xs font-bold text-white block">Clique para enviar imagem do seu Computador</span>
-                        <span className="text-[11px] text-slate-400 block">PNG, JPG, SVG ou WEBP até 5MB</span>
+                        <span className="text-xs font-bold text-white block">Click to upload image from computer</span>
+                        <span className="text-[11px] text-slate-400 block">PNG, JPG, SVG or WEBP up to 5MB</span>
                       </div>
                     )}
                   </label>
@@ -1330,7 +1330,7 @@ export default function AdminDashboardClient() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Ou cole a URL da imagem (https://...)"
+                    placeholder="Or paste image URL (https://...)"
                     value={newAcadLogo}
                     onChange={(e) => setNewAcadLogo(e.target.value)}
                     className="w-full touch-target px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs focus:border-red-500 outline-none pr-16"
@@ -1341,7 +1341,7 @@ export default function AdminDashboardClient() {
                       onClick={() => setNewAcadLogo('')}
                       className="absolute right-2 top-1.5 text-xs font-bold text-slate-400 hover:text-red-400 px-2 py-1 rounded bg-slate-800"
                     >
-                      Limpar
+                      Clear
                     </button>
                   )}
                 </div>
@@ -1359,14 +1359,14 @@ export default function AdminDashboardClient() {
                   onClick={() => setAddAcademyModalOpen(false)}
                   className="flex-1 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs uppercase cursor-pointer"
                 >
-                  Cancelar
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingAcademy}
                   className="flex-1 py-3 rounded-xl bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSavingAcademy ? 'Salvando...' : editingAcademyId ? 'Salvar Alterações' : 'Adicionar Academia'}
+                  {isSavingAcademy ? 'Saving...' : editingAcademyId ? 'Save Changes' : 'Add Academy'}
                 </button>
               </div>
             </form>

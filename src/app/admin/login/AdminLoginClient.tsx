@@ -40,7 +40,7 @@ export default function AdminLoginClient() {
           <h1 className="text-2xl font-black text-white uppercase tracking-tight">Clarico Admin Login</h1>
           <p className="text-xs text-slate-400 mt-1">Sign in to manage academy quote leads & catalog.</p>
         </div>
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} noValidate className="space-y-4">
           <div>
             <input
               type="email"

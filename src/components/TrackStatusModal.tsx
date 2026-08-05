@@ -96,7 +96,7 @@ export const TrackStatusModal: React.FC<TrackStatusModalProps> = ({
           </p>
         </div>
 
-        <form onSubmit={handleSearch} className="flex gap-2">
+        <form onSubmit={handleSearch} noValidate className="flex gap-2">
           <input
             type="text"
             required
