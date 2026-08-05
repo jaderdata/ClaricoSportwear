@@ -27,15 +27,11 @@ export async function updateSession(request: NextRequest) {
 
   const isLoginRoute = request.nextUrl.pathname === '/admin/login';
 
+  // Require authentication for all /admin routes except /admin/login.
+  // Allow /admin/login to render so users must enter password when signing in or switching roles.
   if (!user && !isLoginRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/admin/login';
-    return NextResponse.redirect(url);
-  }
-
-  if (user && isLoginRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/admin';
     return NextResponse.redirect(url);
   }
 

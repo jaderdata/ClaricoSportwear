@@ -3,9 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ShoppingBag } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
+import { useCart } from '@/components/cart/CartProvider';
 
 interface NavbarProps {
   onOpenQuote: (productName?: string) => void;
@@ -16,6 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuote, onOpenTrack }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { itemCount, openDrawer } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -28,6 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuote, onOpenTrack }) => {
     { href: '/sports', label: 'Sports' },
     { href: '/sports#sport-types', label: 'Academies & Sports' },
     { href: '/#collections', label: 'Catalog' },
+    { href: '/shop', label: 'Shop' },
     { href: '/#how-it-works', label: 'How It Works' },
   ];
 
@@ -82,19 +85,47 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuote, onOpenTrack }) => {
             >
               Track Order
             </button>
+            <button
+              type="button"
+              onClick={openDrawer}
+              aria-label={`Open cart${itemCount > 0 ? ` (${itemCount} items)` : ''}`}
+              className="touch-target relative p-2.5 text-ink hover:text-accent hover:bg-black/5 rounded-control transition-colors cursor-pointer"
+            >
+              <ShoppingBag className="size-5.5" strokeWidth={1.75} />
+              {itemCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-accent text-paper text-[10px] font-bold flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </button>
             <Button onClick={() => onOpenQuote()} size="md">
               Request a Quote
             </Button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden touch-target text-ink hover:text-accent transition-colors cursor-pointer p-2 rounded-control active:bg-black/5 select-none"
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-          >
-            {mobileMenuOpen ? <X className="size-6.5" strokeWidth={2} /> : <Menu className="size-6.5" strokeWidth={2} />}
-          </button>
+          <div className="lg:hidden flex items-center gap-1">
+            <button
+              type="button"
+              onClick={openDrawer}
+              aria-label={`Open cart${itemCount > 0 ? ` (${itemCount} items)` : ''}`}
+              className="touch-target relative p-2 text-ink hover:text-accent transition-colors cursor-pointer"
+            >
+              <ShoppingBag className="size-6" strokeWidth={1.75} />
+              {itemCount > 0 && (
+                <span className="absolute top-0 right-0 min-w-4.5 h-4.5 px-1 rounded-full bg-accent text-paper text-[10px] font-bold flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="touch-target text-ink hover:text-accent transition-colors cursor-pointer p-2 rounded-control active:bg-black/5 select-none"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            >
+              {mobileMenuOpen ? <X className="size-6.5" strokeWidth={2} /> : <Menu className="size-6.5" strokeWidth={2} />}
+            </button>
+          </div>
         </div>
       </Container>
 

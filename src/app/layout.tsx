@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter_Tight } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/components/cart/CartProvider";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 const interTight = Inter_Tight({
   subsets: ["latin"],
@@ -167,7 +169,10 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-paper text-ink selection:bg-accent selection:text-paper font-sans">
-        {children}
+        <CartProvider>
+          {children}
+          <CartDrawer />
+        </CartProvider>
       </body>
     </html>
   );

@@ -1,0 +1,1378 @@
+# PHASE 4 — Multi-Marketplace Publishing Engine
+
+## Project Context
+
+Phases 1, 2, and 3 have already established the foundation of the system.
+
+### Phase 1 — Depop Migration
+
+My existing Depop listings were extracted, backed up, structured, and prepared for migration.
+
+### Phase 2 — Supabase Architecture
+
+My existing Supabase database was evolved into the central product database without rebuilding my existing website from scratch.
+
+Supabase is now the **Single Source of Truth** for product information.
+
+### Phase 3 — Admin Product Management
+
+A private admin panel was created inside my existing application.
+
+From the admin panel, I can:
+
+* Create products
+* Edit products
+* Upload images
+* Manage descriptions
+* Manage prices
+* Manage categories
+* Manage tags
+* Manage variants
+* Select desired sales channels
+* See actual marketplace publication status
+
+The architecture is now:
+
+**Admin Panel → Supabase → Website / Marketplace Publishing System**
+
+Phase 4 will build the actual marketplace publishing engine.
+
+---
+
+# Main Objective
+
+Build a reliable **multi-marketplace publishing engine** that takes products stored in Supabase and publishes them ONLY to the sales channels I explicitly select.
+
+The system must support independent channel selection.
+
+For example:
+
+Product A:
+
+Website → YES
+
+Depop → YES
+
+Vinted → YES
+
+eBay → NO
+
+The system should publish Product A only to:
+
+* Website
+* Depop
+* Vinted
+
+It must NOT publish Product A to eBay.
+
+Another product may have:
+
+Website → YES
+
+Depop → NO
+
+Vinted → YES
+
+eBay → YES
+
+That product should only be distributed to:
+
+* Website
+* Vinted
+* eBay
+
+Every product must have independent channel configuration.
+
+---
+
+# CORE PRINCIPLE
+
+The system must always distinguish between:
+
+**Desired Channel State**
+
+and
+
+**Actual Marketplace State**
+
+Example:
+
+Product ID:
+
+`abc-123`
+
+Desired channels:
+
+Website → YES
+
+Depop → YES
+
+Vinted → YES
+
+eBay → NO
+
+Actual status:
+
+Website → Active
+
+Depop → Published
+
+Vinted → Not Published
+
+eBay → Not Published
+
+In this situation, the system should recognize:
+
+Depop already exists → DO NOTHING
+
+Vinted is desired but does not exist → CREATE PUBLISH JOB
+
+eBay is not desired → DO NOTHING
+
+Website is already active → DO NOTHING
+
+This comparison is the core logic of Phase 4.
+
+---
+
+# STEP 1 — Inspect the Existing System
+
+Before implementing anything, inspect the completed Phase 3 architecture.
+
+Understand:
+
+* Current Supabase schema
+* Product tables
+* Product image architecture
+* Product variants
+* Marketplace tables
+* Desired channel fields
+* Actual marketplace status fields
+* Existing marketplace listing IDs
+* Existing Depop migrated listings
+* Admin panel
+* Existing authentication
+* Existing job-related infrastructure
+* Existing server/backend architecture
+* Existing API routes
+* Existing background task infrastructure, if any
+
+Do not duplicate infrastructure that already exists.
+
+---
+
+# STEP 2 — Define the Publishing State Machine
+
+Create a clear state model for marketplace publishing.
+
+Conceptually, each product/channel relationship may have states such as:
+
+`not_selected`
+
+`ready`
+
+`queued`
+
+`processing`
+
+`published`
+
+`failed`
+
+`needs_attention`
+
+`update_pending`
+
+`paused`
+
+The exact implementation should follow the existing database architecture.
+
+Do not create duplicate status systems if Phase 2 or Phase 3 already established equivalent fields.
+
+The important principle is that the system must always know:
+
+1. Does the user want this product on this channel?
+2. Is the product ready for this channel?
+3. Has a publishing job been created?
+4. Is that job currently running?
+5. Has the listing already been published?
+6. What is the marketplace listing ID?
+7. What is the marketplace listing URL?
+8. Did the last operation succeed or fail?
+
+---
+
+# STEP 3 — Desired Channel Selection
+
+Use the sales channel selections created in Phase 3.
+
+Example:
+
+`website = true`
+
+`depop = true`
+
+`vinted = true`
+
+`ebay = false`
+
+These selections represent explicit publishing intent.
+
+IMPORTANT:
+
+A marketplace connector must NEVER publish a product simply because the connector exists.
+
+Publication must require an explicit channel selection.
+
+The system should follow this rule:
+
+**No selection = No publication**
+
+This must be enforced at the backend/job level, not only in the UI.
+
+---
+
+# STEP 4 — Reconciliation Engine
+
+Create a reconciliation process that compares:
+
+**Desired State**
+
+against:
+
+**Actual State**
+
+For every product and every supported marketplace.
+
+Example:
+
+Desired:
+
+Vinted → YES
+
+Actual:
+
+Vinted → Not Published
+
+Result:
+
+`CREATE PUBLISH JOB`
+
+Another example:
+
+Desired:
+
+Vinted → YES
+
+Actual:
+
+Vinted → Published
+
+Result:
+
+`NO ACTION`
+
+Another example:
+
+Desired:
+
+eBay → NO
+
+Actual:
+
+eBay → Not Published
+
+Result:
+
+`NO ACTION`
+
+Another example:
+
+Desired:
+
+Depop → YES
+
+Actual:
+
+Depop → Published
+
+Result:
+
+`NO ACTION`
+
+The reconciliation engine should determine what work is necessary.
+
+It should NOT perform marketplace browser automation directly.
+
+It should create jobs.
+
+---
+
+# STEP 5 — Publishing Job Queue
+
+Create a publishing job queue.
+
+A conceptual job may contain:
+
+* Job ID
+* Product ID
+* Marketplace
+* Action
+* Status
+* Created timestamp
+* Started timestamp
+* Completed timestamp
+* Retry count
+* Last error
+* Worker identifier
+* Marketplace listing ID
+* Result metadata
+
+Possible actions may eventually include:
+
+`publish`
+
+`update`
+
+`unpublish`
+
+`refresh_status`
+
+However, Phase 4 should prioritize:
+
+`publish`
+
+Do not overbuild synchronization before initial publishing works reliably.
+
+---
+
+# STEP 6 — Job Idempotency
+
+This is extremely important.
+
+The same publishing job must not accidentally create multiple marketplace listings.
+
+Before publishing, the worker must check:
+
+1. Does a marketplace listing already exist in Supabase?
+2. Is there already an external listing ID?
+3. Is there already a successful publishing job?
+4. Is another publishing job currently processing this product/channel?
+5. Is there an existing pending job?
+
+If the product already has a valid marketplace listing:
+
+DO NOT CREATE ANOTHER LISTING.
+
+The system must be designed to safely retry failed jobs without accidentally creating duplicates.
+
+---
+
+# STEP 7 — Marketplace Connector Architecture
+
+Do not create one giant publishing script containing marketplace-specific logic for every platform.
+
+Create a connector architecture.
+
+Conceptually:
+
+`Publishing Engine`
+
+↓
+
+`Marketplace Connector Interface`
+
+↓
+
+`Depop Connector`
+
+`Vinted Connector`
+
+`eBay Connector`
+
+Future:
+
+`Etsy Connector`
+
+`Amazon Connector`
+
+`Other Marketplace Connector`
+
+Each connector should be responsible for translating the canonical Supabase product into the marketplace-specific format.
+
+---
+
+# STEP 8 — Canonical Product Data
+
+The publishing engine should load canonical product information from Supabase.
+
+For example:
+
+* Product ID
+* Title
+* Description
+* Images
+* Price
+* Category
+* Tags
+* Variants
+* Sizes
+* Colors
+* Condition
+* Brand
+* Shipping information
+* Other relevant metadata
+
+The marketplace connector then transforms that canonical information into the format required by the specific marketplace.
+
+Do NOT make Depop or Vinted the source of truth.
+
+Supabase remains the source of truth.
+
+---
+
+# STEP 9 — Marketplace-Specific Overrides
+
+Different marketplaces may require different titles, descriptions, categories, prices, or metadata.
+
+Therefore, allow marketplace-specific overrides.
+
+For example:
+
+Canonical title:
+
+`Funny Brazilian Jiu-Jitsu Black Belt Shirt`
+
+Depop title:
+
+`Funny BJJ Black Belt Tee`
+
+Vinted title:
+
+`Brazilian Jiu-Jitsu Black Belt T-Shirt`
+
+eBay title:
+
+`Funny BJJ Brazilian Jiu-Jitsu Black Belt Graphic T-Shirt`
+
+The canonical product remains unchanged.
+
+Marketplace overrides should only affect that specific channel.
+
+If no override exists, use the canonical product value.
+
+---
+
+# STEP 10 — Marketplace Readiness Validation
+
+Before creating a publishing job, validate that the product contains the information required by that marketplace.
+
+Example:
+
+Vinted may require certain category/condition information.
+
+eBay may require different item specifics.
+
+Depop may require different product attributes.
+
+The system should be able to determine:
+
+`READY`
+
+or:
+
+`NOT READY`
+
+If a product is not ready:
+
+Do NOT attempt publication.
+
+Instead, record exactly what information is missing.
+
+Example:
+
+`Vinted → Missing category`
+
+`eBay → Missing required item specific`
+
+`Depop → Ready`
+
+The admin panel should display this information.
+
+---
+
+# STEP 11 — Prefer Official APIs Where Available
+
+Before implementing browser automation for any marketplace, investigate whether the marketplace provides an official API or officially supported integration suitable for the required operation.
+
+Preferred order:
+
+1. Official marketplace API
+2. Official integration mechanism
+3. Supported partner/integration method
+4. Browser automation only when appropriate and permitted
+
+Do not bypass authentication protections, CAPTCHAs, anti-bot systems, access controls, or marketplace security mechanisms.
+
+If automation reaches a CAPTCHA, security verification, MFA request, or other owner-confirmation step, stop and request manual intervention.
+
+---
+
+# STEP 12 — Browser Automation Architecture
+
+If browser automation is required and appropriate for a marketplace, keep it isolated inside that marketplace's connector.
+
+For example:
+
+`connectors/depop`
+
+`connectors/vinted`
+
+`connectors/ebay`
+
+The rest of the application should not care whether a marketplace uses:
+
+* API
+* Browser automation
+* Another supported integration
+
+The publishing engine should interact with a common connector interface.
+
+---
+
+# STEP 13 — Authentication
+
+Marketplace authentication must be handled carefully.
+
+Prefer:
+
+* Existing authenticated browser sessions
+* Secure session storage
+* Official OAuth where available
+
+Do NOT hardcode passwords inside source code.
+
+Do NOT store plaintext credentials in the database.
+
+Do NOT attempt to bypass:
+
+* MFA
+* CAPTCHA
+* security challenges
+* suspicious-login checks
+
+If manual authentication is required, pause the job and report:
+
+`NEEDS_AUTHENTICATION`
+
+or equivalent.
+
+---
+
+# STEP 14 — Image Publishing
+
+Marketplace connectors should use the canonical images stored through the architecture created in Phases 2 and 3.
+
+The publishing process should:
+
+1. Load product image references from Supabase.
+2. Preserve image order.
+3. Identify the primary image.
+4. Validate that required images exist.
+5. Upload the appropriate images to the marketplace.
+6. Record failures clearly.
+
+Do not modify the canonical image files merely to satisfy one marketplace.
+
+If marketplace-specific image processing is required later, create derived versions while preserving the originals.
+
+---
+
+# STEP 15 — Publish Operation
+
+A publishing worker should conceptually execute:
+
+1. Receive job.
+2. Lock job.
+3. Load product.
+4. Confirm marketplace is still selected.
+5. Confirm product is ready.
+6. Check for existing marketplace listing.
+7. Load marketplace-specific overrides.
+8. Load canonical images.
+9. Authenticate with marketplace connector.
+10. Prepare marketplace payload/form.
+11. Publish listing.
+12. Confirm publication succeeded.
+13. Capture external listing ID.
+14. Capture external listing URL.
+15. Capture relevant marketplace metadata.
+16. Save result to Supabase.
+17. Mark job as completed.
+18. Update marketplace status to published.
+
+---
+
+# STEP 16 — Final Verification
+
+Do not mark a job as successfully published simply because the final submit button was clicked.
+
+Verify publication.
+
+Where possible, confirm:
+
+* Marketplace listing exists
+* External listing ID exists
+* Listing URL exists
+* Listing appears active
+* Expected title exists
+* Expected price exists
+
+Only then mark:
+
+`published`
+
+---
+
+# STEP 17 — Write Results Back to Supabase
+
+After successful publication, store:
+
+* Marketplace
+* Product ID
+* External listing ID
+* External listing URL
+* Published timestamp
+* Current status
+* Last successful synchronization
+* Marketplace-specific metadata
+
+Example:
+
+Product:
+
+`abc-123`
+
+Marketplace:
+
+`vinted`
+
+External ID:
+
+`987654321`
+
+URL:
+
+`marketplace listing URL`
+
+Status:
+
+`published`
+
+This allows Supabase to know exactly where every product exists.
+
+---
+
+# STEP 18 — Error Handling
+
+If publication fails, do NOT lose the job.
+
+Record:
+
+* Error type
+* Error message
+* Marketplace
+* Product ID
+* Timestamp
+* Step where failure occurred
+* Retry count
+
+Classify errors when practical.
+
+Examples:
+
+`AUTHENTICATION_REQUIRED`
+
+`MISSING_PRODUCT_DATA`
+
+`IMAGE_UPLOAD_FAILED`
+
+`MARKETPLACE_VALIDATION_ERROR`
+
+`NETWORK_ERROR`
+
+`POSSIBLE_DUPLICATE`
+
+`UNKNOWN_ERROR`
+
+---
+
+# STEP 19 — Retry Strategy
+
+Not every failure should automatically retry.
+
+For temporary failures such as:
+
+* network error
+* temporary marketplace error
+
+automatic retry may be appropriate.
+
+For errors such as:
+
+* CAPTCHA
+* authentication required
+* missing category
+* missing required data
+* marketplace rejection
+
+do NOT repeatedly retry.
+
+Set:
+
+`needs_attention`
+
+and show the problem in the admin panel.
+
+---
+
+# STEP 20 — Never Publish Without Authorization
+
+Before the final marketplace submission, verify again:
+
+`desired_channel = true`
+
+This prevents situations where:
+
+1. I select Vinted.
+2. A job is created.
+3. I change my mind and deselect Vinted.
+4. The worker starts later.
+5. The worker publishes anyway.
+
+The worker must re-check authorization immediately before publication.
+
+If the marketplace is no longer selected:
+
+Cancel the job.
+
+---
+
+# STEP 21 — Channel Independence
+
+Each marketplace must operate independently.
+
+A failure on Vinted must NOT block Depop.
+
+A failure on eBay must NOT block the website.
+
+Example:
+
+Website → Active
+
+Depop → Published
+
+Vinted → Failed
+
+eBay → Published
+
+This is a valid system state.
+
+The admin panel should display each channel independently.
+
+---
+
+# STEP 22 — Existing Depop Listings
+
+Products imported during Phases 1 and 2 may already have valid Depop listings.
+
+If a product already contains:
+
+* Depop external ID
+* Depop URL
+* Depop published status
+
+the system must recognize that Depop already exists.
+
+DO NOT republish those products.
+
+This is critical.
+
+The migration history must be respected.
+
+---
+
+# STEP 23 — Website Publishing
+
+The website is also a sales channel, but it should not necessarily use the same external publishing mechanism.
+
+Because the website already reads from Supabase, publishing to the website may simply mean changing the product's website visibility/status.
+
+For example:
+
+Website selected:
+
+`true`
+
+Website status:
+
+`active`
+
+The website can then display the product according to the existing application architecture.
+
+Do not unnecessarily create browser automation for my own website.
+
+---
+
+# STEP 24 — Manual Publish Control
+
+The admin panel should support a clear workflow.
+
+Example:
+
+Product:
+
+`Funny BJJ Black Belt Shirt`
+
+Desired Channels:
+
+☑ Website
+
+☑ Depop
+
+☑ Vinted
+
+☐ eBay
+
+Then:
+
+`SAVE`
+
+After saving, the system can determine which publishing jobs are required.
+
+Alternatively, if safer for the current architecture, provide a separate action:
+
+`Publish Selected Channels`
+
+This can provide additional control during the early stages of Phase 4.
+
+For the initial implementation, prefer safety and visibility over completely invisible automation.
+
+---
+
+# STEP 25 — Publishing Preview
+
+Before publishing, provide a way to inspect what will be sent to each marketplace.
+
+Example:
+
+### Vinted Preview
+
+Title
+
+Description
+
+Price
+
+Category
+
+Images
+
+Size
+
+Condition
+
+### Depop Preview
+
+Title
+
+Description
+
+Price
+
+Category
+
+Images
+
+Tags
+
+This will help identify incorrect marketplace mappings before publication.
+
+---
+
+# STEP 26 — Admin Publishing Dashboard
+
+Extend the Phase 3 admin panel with a publishing dashboard.
+
+Display:
+
+* Product
+* Marketplace
+* Desired state
+* Actual state
+* Job status
+* Last attempt
+* Last error
+* External listing URL
+* Retry option
+
+Useful filters:
+
+* Pending
+* Processing
+* Published
+* Failed
+* Needs Attention
+* Not Published
+
+---
+
+# STEP 27 — Manual Retry
+
+For failed jobs, provide:
+
+`Retry`
+
+Before retrying:
+
+1. Revalidate product data.
+2. Check whether a listing was actually created despite the previous error.
+3. Check external ID.
+4. Check for duplicate risk.
+
+Never blindly resubmit a failed publishing operation.
+
+---
+
+# STEP 28 — Audit Log
+
+Maintain an audit trail.
+
+Important events should include:
+
+* Product selected for marketplace
+* Product deselected
+* Publishing job created
+* Job started
+* Authentication requested
+* Listing submitted
+* Listing verified
+* Publication completed
+* Publication failed
+* Retry requested
+* Marketplace ID recorded
+
+This will make debugging much easier.
+
+---
+
+# STEP 29 — Concurrency Protection
+
+Prevent two workers from publishing the same product to the same marketplace simultaneously.
+
+Use appropriate job locking or database constraints.
+
+Conceptually, only one active publish job should exist for:
+
+`product_id + marketplace + publish action`
+
+This is another layer of duplicate protection.
+
+---
+
+# STEP 30 — Start With ONE Marketplace
+
+Do NOT implement Depop, Vinted, and eBay simultaneously.
+
+Build the engine architecture so all three are supported conceptually.
+
+Then choose ONE marketplace for the first end-to-end implementation.
+
+Recommended development sequence:
+
+### 1. Core publishing engine
+
+Build:
+
+* desired state
+* actual state
+* reconciliation
+* queue
+* jobs
+* logging
+* retries
+* duplicate protection
+
+### 2. First marketplace connector
+
+Implement ONE connector.
+
+### 3. Test completely
+
+Validate:
+
+Supabase → Job → Connector → Marketplace → Verification → Supabase
+
+### 4. Second connector
+
+Only after the first connector is stable.
+
+### 5. Third connector
+
+Repeat the same architecture.
+
+Do not copy and paste the entire publishing system for every marketplace.
+
+Reuse the core engine.
+
+---
+
+# STEP 31 — First Marketplace Test
+
+For the first connector, test with ONE new product.
+
+Do not use the entire catalog.
+
+Example:
+
+Create Product Test A.
+
+Select:
+
+Website → YES
+
+First Marketplace → YES
+
+Other Marketplaces → NO
+
+Run publication.
+
+Verify:
+
+* Only selected channels receive the product.
+* No unselected marketplace receives anything.
+* External ID is captured.
+* External URL is captured.
+* Supabase is updated.
+* Job is marked completed.
+* No duplicate listing is created.
+
+STOP and show me the results.
+
+---
+
+# STEP 32 — Multi-Channel Test
+
+After one connector works reliably, add the second connector.
+
+Create another test product.
+
+Example:
+
+Website → YES
+
+Depop → YES
+
+Vinted → YES
+
+eBay → NO
+
+Expected behavior:
+
+Website → Active
+
+Depop → Published
+
+Vinted → Published
+
+eBay → NOTHING
+
+Verify that each marketplace operates independently.
+
+---
+
+# STEP 33 — Adding a Marketplace Later
+
+Test this important scenario.
+
+Existing product:
+
+Website → YES
+
+Depop → YES
+
+Vinted → NO
+
+eBay → NO
+
+Actual:
+
+Website → Active
+
+Depop → Published
+
+Later I change:
+
+Vinted → YES
+
+Expected behavior:
+
+The system should create ONLY:
+
+`Publish Product → Vinted`
+
+It must NOT republish:
+
+* Website
+* Depop
+
+This is one of the most important behaviors in the entire architecture.
+
+---
+
+# STEP 34 — Removing a Channel
+
+If I deselect a marketplace that already contains a published listing, do NOT automatically delete the marketplace listing during the initial Phase 4 implementation.
+
+For example:
+
+Vinted:
+
+Desired → NO
+
+Actual → Published
+
+This should produce a state such as:
+
+`REMOVAL REQUESTED`
+
+or:
+
+`CHANNEL DESELECTED — LISTING STILL ACTIVE`
+
+Require explicit confirmation before removing an existing marketplace listing.
+
+Publishing and deleting are different risk levels.
+
+Never interpret deselection as automatic deletion unless that behavior is explicitly implemented and approved later.
+
+---
+
+# STEP 35 — Updates Are a Separate Problem
+
+Initial Phase 4 should focus primarily on:
+
+**CREATE / PUBLISH**
+
+Do not immediately attempt perfect two-way synchronization.
+
+For example, changing a price in Supabase and automatically changing it across every marketplace can be implemented later.
+
+Architect the system so updates are possible, but first make initial publishing reliable.
+
+The development priority should be:
+
+1. Publish correctly
+2. Avoid duplicates
+3. Track marketplace IDs
+4. Track status
+5. Handle failures
+6. Then implement updates
+
+---
+
+# STEP 36 — Do Not Build Two-Way Sync Yet
+
+Supabase remains the source of truth.
+
+During this phase, do not attempt to automatically import marketplace edits back into Supabase.
+
+Avoid creating complex conflict resolution such as:
+
+`Supabase says $24.99`
+
+but:
+
+`Depop says $22.99`
+
+Which one wins?
+
+That problem can be handled in a later synchronization phase.
+
+For now:
+
+**Supabase is authoritative.**
+
+---
+
+# STEP 37 — Security
+
+Protect marketplace credentials and sessions.
+
+Do not expose credentials:
+
+* in frontend code
+* in Git
+* in browser-visible environment variables
+* in logs
+* in database fields accessible to normal users
+
+Use secure server-side storage and existing secrets infrastructure.
+
+---
+
+# STEP 38 — Observability
+
+The system should make failures visible.
+
+I should never have to wonder:
+
+"Did this product publish?"
+
+The admin panel should clearly answer:
+
+Website → Active
+
+Depop → Published
+
+Vinted → Failed — Authentication Required
+
+eBay → Not Selected
+
+This visibility is essential.
+
+---
+
+# STEP 39 — Definition of Done
+
+Phase 4 is complete when:
+
+* Products can independently select sales channels.
+* Unselected channels never receive products.
+* Selected channels generate publishing jobs when needed.
+* Existing listings are recognized.
+* Duplicate listings are prevented.
+* Publishing jobs are queued.
+* Workers can process jobs.
+* Marketplace connectors are modular.
+* At least one marketplace connector works end-to-end.
+* Successful publications return external IDs and URLs.
+* Supabase records actual marketplace state.
+* Failed jobs are logged.
+* Authentication problems are surfaced.
+* Retry behavior exists.
+* Existing migrated Depop listings are not accidentally recreated.
+* Channel deselection does not automatically delete existing listings.
+* The admin panel clearly shows publication state.
+
+---
+
+# Final Architecture After Phase 4
+
+The system should conceptually operate as:
+
+**Admin Panel**
+
+↓
+
+**Supabase — Single Source of Truth**
+
+↓
+
+**Desired Channel State**
+
+↓
+
+**Reconciliation Engine**
+
+↓
+
+**Publishing Job Queue**
+
+↓
+
+**Marketplace Workers / Connectors**
+
+↓
+
+**Website | Depop | Vinted | eBay**
+
+↓
+
+**Verification**
+
+↓
+
+**External Listing ID + URL + Status**
+
+↓
+
+**Supabase**
+
+↓
+
+**Admin Panel**
+
+The entire loop becomes traceable.
+
+---
+
+# IMPORTANT EXECUTION ORDER
+
+Do not immediately start coding everything described above.
+
+First:
+
+1. Inspect the Phase 3 implementation.
+2. Inspect the existing marketplace-related schema.
+3. Research the supported integration method for each target marketplace.
+4. Identify which marketplace should be implemented first.
+5. Design the publishing engine.
+6. Design the job lifecycle.
+7. Design duplicate protection.
+8. Design connector interfaces.
+9. Design authentication/session handling.
+10. Identify required Supabase changes.
+11. Identify security concerns.
+12. Identify marketplace-specific limitations.
+13. Present the complete implementation plan to me.
+14. **STOP AND WAIT FOR MY APPROVAL.**
+
+Only after I approve the architecture should implementation begin.
+
+Then:
+
+15. Implement the core publishing engine.
+16. Implement ONE marketplace connector.
+17. Test with ONE product.
+18. Show me the result.
+19. **STOP AND WAIT FOR MY APPROVAL.**
+20. Test with a small batch.
+21. Verify duplicate protection.
+22. Verify error handling.
+23. Verify Supabase updates.
+24. Only then begin implementing the next marketplace connector.
+
+---
+
+# Core Rule
+
+The most important rule of Phase 4 is:
+
+**A product must only be published to a marketplace when I explicitly selected that marketplace.**
+
+Selection represents authorization to publish.
+
+No selection means:
+
+**DO NOT PUBLISH.**
+
+Existing publication means:
+
+**DO NOT DUPLICATE.**
+
+Failure means:
+
+**RECORD, REPORT, AND HANDLE SAFELY.**
+
+The final objective is that I can create a product once in my own system, choose exactly where I want it sold, and allow the publishing engine to distribute it only to those selected channels while Supabase keeps track of everything.

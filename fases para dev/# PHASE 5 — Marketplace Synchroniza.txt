@@ -1,0 +1,1470 @@
+# PHASE 5 — Marketplace Synchronization, Reconciliation & Product Lifecycle Engine
+
+## Project Context
+
+Phases 1 through 4 have established the core architecture.
+
+### Phase 1 — Existing Marketplace Migration
+
+Existing Depop listings were extracted and migrated into the new centralized architecture.
+
+### Phase 2 — Supabase as the Central Database
+
+The existing website database was evolved so that Supabase became the central source of product information.
+
+### Phase 3 — Product Management Control Panel
+
+A private admin panel was created where products can be:
+
+* Created
+* Edited
+* Organized
+* Assigned to sales channels
+* Managed without depending on an external marketplace
+
+### Phase 4 — Marketplace Publishing Engine
+
+The system can publish products from Supabase to selected marketplaces.
+
+The architecture now conceptually works as:
+
+**Admin Panel**
+
+↓
+
+**Supabase**
+
+↓
+
+**Publishing Engine**
+
+↓
+
+**Website / Depop / Vinted / eBay**
+
+↓
+
+**External Listing IDs + URLs + Status**
+
+↓
+
+**Supabase**
+
+Phase 5 will make this architecture continuously maintainable.
+
+---
+
+# MAIN OBJECTIVE
+
+Build the synchronization and reconciliation layer that keeps product information and marketplace listing states aligned over time.
+
+Phase 4 answers:
+
+> "How do I publish this product?"
+
+Phase 5 answers:
+
+> "Now that this product exists in multiple places, how do I keep everything organized and synchronized?"
+
+The system must be able to detect changes, determine what needs to be synchronized, safely execute those changes, verify the result, and record the final state.
+
+---
+
+# MOST IMPORTANT ARCHITECTURAL RULE
+
+Supabase remains the:
+
+# SINGLE SOURCE OF TRUTH
+
+The default direction of synchronization should be:
+
+**Supabase → Marketplaces**
+
+NOT:
+
+**Marketplace ↔ Marketplace**
+
+and NOT unrestricted:
+
+**Marketplace → Supabase**
+
+For example:
+
+If Supabase says:
+
+Price = `$24.99`
+
+and Depop says:
+
+Price = `$22.99`
+
+the system should NOT automatically assume Depop is correct.
+
+The system should detect the difference and follow the synchronization policy defined in Supabase.
+
+This prevents external marketplaces from silently overwriting canonical product information.
+
+---
+
+# STEP 1 — Inspect the Completed Phase 4 System
+
+Before implementing Phase 5, inspect:
+
+* Current Supabase schema
+* Marketplace listing architecture
+* Publishing jobs
+* Marketplace connectors
+* Marketplace external IDs
+* Marketplace URLs
+* Publishing statuses
+* Admin panel
+* Audit logs
+* Error handling
+* Retry logic
+* Existing product status architecture
+* Existing website publishing logic
+
+Do not create a separate synchronization system if Phase 4 infrastructure can be extended.
+
+Reuse the job queue, connector architecture, logging, and marketplace records wherever possible.
+
+---
+
+# STEP 2 — Define Canonical Fields
+
+Determine which fields are controlled by Supabase.
+
+Examples may include:
+
+* Canonical title
+* Canonical description
+* Canonical images
+* Base price
+* Product category
+* Tags
+* Variants
+* Sizes
+* Colors
+* Product status
+* Availability
+
+Marketplace-specific overrides may still exist.
+
+For example:
+
+Canonical price:
+
+`$24.99`
+
+Depop price override:
+
+`$26.00`
+
+Vinted price override:
+
+`$25.00`
+
+eBay price override:
+
+`$27.99`
+
+In this case, synchronization should respect the marketplace-specific override.
+
+Do not overwrite valid marketplace overrides with canonical values.
+
+---
+
+# STEP 3 — Track Product Versions
+
+Introduce a reliable way to know when canonical product data changed.
+
+This may use:
+
+* `updated_at`
+* revision numbers
+* content hashes
+* version numbers
+* field-level timestamps
+
+The exact implementation should match the existing architecture.
+
+The system should be able to answer:
+
+> Has this product changed since the last successful synchronization with Vinted?
+
+Example:
+
+Product version:
+
+`18`
+
+Vinted last synchronized version:
+
+`16`
+
+Result:
+
+Vinted may require an update.
+
+---
+
+# STEP 4 — Track Marketplace Synchronization State
+
+For every product-marketplace relationship, track relevant synchronization information.
+
+Conceptually:
+
+`product_id`
+
+`marketplace`
+
+`external_listing_id`
+
+`external_listing_url`
+
+`publication_status`
+
+`last_synced_at`
+
+`last_synced_version`
+
+`last_verified_at`
+
+`last_error`
+
+`sync_status`
+
+This allows each marketplace to progress independently.
+
+---
+
+# STEP 5 — Field-Level Synchronization
+
+Do not blindly republish the entire listing every time one field changes.
+
+Where supported, determine what changed.
+
+For example:
+
+Previous:
+
+Price → `$24.99`
+
+New:
+
+Price → `$22.99`
+
+Only price changed.
+
+The synchronization system should preferably create:
+
+`UPDATE_PRICE`
+
+rather than rebuilding the entire listing.
+
+Other possible operations:
+
+`UPDATE_TITLE`
+
+`UPDATE_DESCRIPTION`
+
+`UPDATE_IMAGES`
+
+`UPDATE_PRICE`
+
+`UPDATE_VARIANTS`
+
+`UPDATE_AVAILABILITY`
+
+`UPDATE_CATEGORY`
+
+`UPDATE_FULL_LISTING`
+
+The exact operations depend on marketplace capabilities.
+
+---
+
+# STEP 6 — Marketplace Capability Matrix
+
+Different marketplaces support different operations.
+
+Create a capability model.
+
+For example:
+
+| Capability         | Website | Depop               | Vinted              | eBay                |
+| ------------------ | ------- | ------------------- | ------------------- | ------------------- |
+| Create listing     | Yes     | Connector dependent | Connector dependent | Connector dependent |
+| Update price       | Yes     | Verify              | Verify              | Verify              |
+| Update title       | Yes     | Verify              | Verify              | Verify              |
+| Update description | Yes     | Verify              | Verify              | Verify              |
+| Update images      | Yes     | Verify              | Verify              | Verify              |
+| Update variants    | Yes     | Verify              | Verify              | Verify              |
+| End listing        | Yes     | Verify              | Verify              | Verify              |
+| Read listing state | Yes     | Verify              | Verify              | Verify              |
+
+Do not assume capabilities.
+
+Research and verify the supported integration method for each marketplace before implementing an operation.
+
+---
+
+# STEP 7 — Change Detection
+
+When a canonical product changes, determine which marketplaces are affected.
+
+Example:
+
+Product A is published on:
+
+Website → YES
+
+Depop → YES
+
+Vinted → YES
+
+eBay → NO
+
+Price changes.
+
+Expected behavior:
+
+Website → Update
+
+Depop → Update
+
+Vinted → Update
+
+eBay → NOTHING
+
+The system must never create synchronization jobs for marketplaces where the product is not published or selected.
+
+---
+
+# STEP 8 — Marketplace-Specific Overrides
+
+Marketplace overrides must take precedence over canonical values for that marketplace.
+
+Example:
+
+Canonical price:
+
+`$24.99`
+
+Depop override:
+
+`$26.99`
+
+Vinted:
+
+No override
+
+After canonical price changes to:
+
+`$22.99`
+
+Expected result:
+
+Depop → remains `$26.99`
+
+Vinted → changes to `$22.99`
+
+Website → changes according to website pricing policy
+
+This prevents synchronization from destroying intentional channel-specific strategies.
+
+---
+
+# STEP 9 — Synchronization Jobs
+
+Extend the Phase 4 job queue.
+
+Possible actions now include:
+
+`publish`
+
+`update`
+
+`verify`
+
+`pause`
+
+`end_listing`
+
+`refresh_status`
+
+Do not create an entirely separate queue unless there is a strong architectural reason.
+
+Use the existing job infrastructure.
+
+---
+
+# STEP 10 — Synchronization Workflow
+
+A typical update job should execute:
+
+1. Receive synchronization job.
+2. Lock job.
+3. Load canonical product.
+4. Load marketplace listing record.
+5. Confirm marketplace is still authorized.
+6. Confirm external listing exists.
+7. Load marketplace overrides.
+8. Determine effective marketplace values.
+9. Compare with last known marketplace state.
+10. Determine required changes.
+11. Execute connector update.
+12. Verify the marketplace accepted the change.
+13. Read back marketplace state where supported.
+14. Update synchronization metadata.
+15. Mark job completed.
+16. Record audit event.
+
+---
+
+# STEP 11 — Never Assume an Update Succeeded
+
+Clicking "Save" or receiving a browser action result is not sufficient.
+
+Verify the resulting listing state whenever technically possible.
+
+Example:
+
+Requested:
+
+Price → `$22.99`
+
+After update:
+
+Read marketplace listing.
+
+Expected:
+
+Price → `$22.99`
+
+If actual value remains:
+
+`$24.99`
+
+mark the synchronization as failed or inconsistent.
+
+Do not mark it successful simply because the submission action completed.
+
+---
+
+# STEP 12 — Reconciliation
+
+Synchronization is proactive.
+
+Reconciliation is defensive.
+
+Create a process that periodically checks whether Supabase and marketplace states still agree.
+
+For example:
+
+Supabase expected:
+
+Vinted price → `$24.99`
+
+Marketplace observed:
+
+Vinted price → `$22.99`
+
+Result:
+
+`DRIFT DETECTED`
+
+The system should record the discrepancy.
+
+---
+
+# STEP 13 — Drift Detection
+
+Possible drift examples:
+
+* Price differs
+* Title differs
+* Description differs
+* Listing disappeared
+* Listing was manually ended
+* Marketplace status changed
+* Images differ
+* Availability differs
+
+Do not automatically correct every type of drift.
+
+Classify drift first.
+
+---
+
+# STEP 14 — Drift Policies
+
+Create configurable behavior.
+
+Possible policies:
+
+### AUTO_CORRECT
+
+Automatically restore the Supabase value.
+
+### REPORT_ONLY
+
+Show the discrepancy but do nothing.
+
+### REQUIRE_APPROVAL
+
+Ask for approval before changing the marketplace.
+
+Different fields may use different policies.
+
+Example:
+
+Price:
+
+`AUTO_CORRECT`
+
+Title:
+
+`REQUIRE_APPROVAL`
+
+Listing manually deleted:
+
+`REPORT_ONLY`
+
+This gives us control over automation risk.
+
+---
+
+# STEP 15 — Manual Marketplace Changes
+
+Users may occasionally edit listings directly inside Depop, Vinted, or eBay.
+
+The system should detect this when possible.
+
+Do NOT automatically import those changes into canonical Supabase data.
+
+Instead show something like:
+
+`Marketplace change detected`
+
+Example:
+
+Depop title:
+
+`New title`
+
+Supabase title:
+
+`Original title`
+
+Available actions may eventually include:
+
+`Restore Supabase version`
+
+or:
+
+`Accept marketplace version`
+
+The default should remain:
+
+**Supabase is authoritative.**
+
+---
+
+# STEP 16 — Controlled Import From Marketplace
+
+Although Supabase is authoritative, provide a future-safe mechanism for intentionally accepting a marketplace value.
+
+Example:
+
+I manually improve a title on Depop.
+
+The system detects it.
+
+I choose:
+
+`Accept Depop title as canonical`
+
+Only after explicit approval should that external value update the canonical product.
+
+Never silently overwrite canonical product data.
+
+---
+
+# STEP 17 — Price Synchronization
+
+Price synchronization deserves dedicated logic.
+
+Support:
+
+* Canonical base price
+* Marketplace price overrides
+* Marketplace fees
+* Future pricing rules
+
+Example:
+
+Base price:
+
+`$24.99`
+
+Depop:
+
+`$24.99`
+
+Vinted:
+
+`$23.99`
+
+eBay:
+
+`$27.99`
+
+These should all be legitimate states.
+
+Do not assume every marketplace must have the same price.
+
+---
+
+# STEP 18 — Availability Synchronization
+
+Track whether a product is:
+
+* Available
+* Temporarily unavailable
+* Archived
+* Sold out
+* Disabled
+
+If a canonical product becomes unavailable, determine the appropriate action for each marketplace.
+
+Do not automatically delete marketplace listings unless the configured policy explicitly requires it.
+
+Prefer reversible actions where marketplaces support them.
+
+---
+
+# STEP 19 — Inventory Architecture
+
+Prepare the architecture for inventory synchronization.
+
+Even if many current products are made-to-order, the system should support future inventory quantities.
+
+Potential fields:
+
+`inventory_quantity`
+
+`reserved_quantity`
+
+`available_quantity`
+
+`inventory_policy`
+
+Possible policies:
+
+`UNLIMITED`
+
+`MADE_TO_ORDER`
+
+`TRACK_QUANTITY`
+
+This prevents the architecture from assuming every product has identical inventory behavior.
+
+---
+
+# STEP 20 — Sold Product Handling
+
+If a marketplace reports that an item was sold, record the event.
+
+Do NOT immediately assume the canonical product should disappear everywhere.
+
+The correct action depends on inventory policy.
+
+Example:
+
+Made-to-order shirt:
+
+Sale on Depop
+
+Result:
+
+Product remains available elsewhere.
+
+Unique item:
+
+Sale on Depop
+
+Result:
+
+Product may need to become unavailable on Vinted/eBay.
+
+Therefore, sales and inventory behavior must depend on product configuration.
+
+---
+
+# STEP 21 — Listing Lifecycle
+
+Support marketplace listing lifecycle states.
+
+Conceptually:
+
+`draft`
+
+`publishing`
+
+`active`
+
+`update_pending`
+
+`paused`
+
+`sold`
+
+`ended`
+
+`removed`
+
+`failed`
+
+`unknown`
+
+The exact mapping should normalize marketplace-specific states into internal states.
+
+---
+
+# STEP 22 — External Listing Health Checks
+
+Create lightweight verification of marketplace listings.
+
+The system should eventually know whether an expected listing still exists.
+
+Example:
+
+Supabase:
+
+Depop → Published
+
+Marketplace:
+
+Listing no longer exists
+
+Result:
+
+`LISTING MISSING`
+
+Do not automatically republish immediately.
+
+Record the discrepancy first.
+
+This protects against creating a listing that the marketplace removed intentionally.
+
+---
+
+# STEP 23 — Marketplace Removal Detection
+
+If a marketplace removes or restricts a listing:
+
+Do not automatically fight the marketplace by continuously recreating it.
+
+Mark:
+
+`MARKETPLACE_REMOVED`
+
+or equivalent.
+
+Record any available reason.
+
+Require manual review before republishing.
+
+---
+
+# STEP 24 — Synchronization Frequency
+
+Do not synchronize everything continuously without reason.
+
+Use event-driven synchronization where possible.
+
+Example:
+
+Product edited
+
+↓
+
+Determine affected marketplaces
+
+↓
+
+Create update jobs
+
+Periodic reconciliation can run less frequently.
+
+This reduces:
+
+* unnecessary requests
+* marketplace load
+* automation risk
+* cost
+* rate-limit problems
+
+---
+
+# STEP 25 — Rate Limiting
+
+Each marketplace connector must respect appropriate request and action rates.
+
+Implement:
+
+* queue throttling
+* concurrency limits
+* exponential backoff where appropriate
+* marketplace-specific limits
+
+Do not create aggressive automation behavior.
+
+---
+
+# STEP 26 — Retry Safety
+
+Update jobs must remain idempotent where possible.
+
+If:
+
+`UPDATE_PRICE → $24.99`
+
+fails halfway through, retrying should not produce unintended behavior.
+
+Before retry:
+
+1. Check current marketplace state.
+2. Determine whether the previous attempt actually succeeded.
+3. Only execute the missing action.
+
+---
+
+# STEP 27 — Conflict Detection
+
+Detect situations where multiple changes happen simultaneously.
+
+Example:
+
+Supabase price changes.
+
+Before synchronization runs, price changes again.
+
+Do not publish the outdated intermediate value unnecessarily.
+
+Prefer the newest valid canonical state.
+
+The job system should detect stale jobs.
+
+---
+
+# STEP 28 — Stale Job Protection
+
+Example:
+
+Job A created:
+
+Price → `$24.99`
+
+Before Job A runs:
+
+Canonical price changes to `$22.99`
+
+Job A should not overwrite the marketplace with an outdated value.
+
+Before execution, always reload the latest canonical product state.
+
+---
+
+# STEP 29 — Product Deactivation
+
+If a product is archived in Supabase, determine what should happen to external listings.
+
+Possible policy:
+
+Website → Hide
+
+Depop → Pause/end
+
+Vinted → Pause/end
+
+eBay → End listing
+
+However, this must be policy-driven.
+
+Do not automatically remove listings without explicit configuration.
+
+---
+
+# STEP 30 — Channel Deselection
+
+If I deselect a marketplace:
+
+Example:
+
+Vinted:
+
+Desired → NO
+
+Actual → Published
+
+Do not automatically delete the listing.
+
+Instead create a state such as:
+
+`ACTION REQUIRED`
+
+Possible options:
+
+`Leave Listing Active`
+
+`Pause Listing`
+
+`End Listing`
+
+This protects against accidental destructive actions.
+
+---
+
+# STEP 31 — Bulk Synchronization
+
+Prepare the admin panel for bulk operations.
+
+Examples:
+
+Select 50 products.
+
+`Update prices`
+
+`Synchronize Vinted`
+
+`Verify Depop`
+
+`Archive`
+
+`Retry failed synchronization`
+
+Bulk operations should still generate individual traceable jobs.
+
+---
+
+# STEP 32 — Synchronization Dashboard
+
+Extend the admin panel.
+
+Create a synchronization dashboard showing:
+
+* Product
+* Marketplace
+* Desired state
+* Actual state
+* Sync status
+* Last synchronized
+* Last verified
+* Pending changes
+* Drift
+* Error
+* External listing link
+
+Useful filters:
+
+`In Sync`
+
+`Update Pending`
+
+`Drift Detected`
+
+`Failed`
+
+`Needs Attention`
+
+`Listing Missing`
+
+`Authentication Required`
+
+---
+
+# STEP 33 — Product-Level Sync View
+
+Inside each product, display marketplace status independently.
+
+Example:
+
+## Website
+
+Status: Active
+
+Sync: Current
+
+## Depop
+
+Status: Published
+
+Sync: Current
+
+Last sync: timestamp
+
+## Vinted
+
+Status: Published
+
+Sync: Update Pending
+
+Pending change: Price
+
+## eBay
+
+Status: Not Selected
+
+This should make the system understandable at a glance.
+
+---
+
+# STEP 34 — Audit History
+
+Maintain a complete synchronization history.
+
+Example:
+
+`10:32 — Product price changed from $24.99 to $22.99`
+
+`10:32 — Vinted update job created`
+
+`10:33 — Vinted update started`
+
+`10:34 — Vinted price verified at $22.99`
+
+`10:34 — Sync completed`
+
+This will be extremely useful for debugging.
+
+---
+
+# STEP 35 — Marketplace Authentication Health
+
+Track whether each connector is currently authenticated.
+
+Possible states:
+
+`CONNECTED`
+
+`AUTHENTICATION_REQUIRED`
+
+`SESSION_EXPIRED`
+
+`UNKNOWN`
+
+Do not discover authentication failure only after hundreds of jobs fail.
+
+If authentication is unavailable, pause affected jobs.
+
+---
+
+# STEP 36 — Connector Health
+
+Track basic connector health.
+
+Example:
+
+Depop:
+
+`Healthy`
+
+Vinted:
+
+`Authentication Required`
+
+eBay:
+
+`Healthy`
+
+If a connector is experiencing repeated failures, stop aggressively retrying.
+
+Pause and surface the issue.
+
+---
+
+# STEP 37 — Error Classification
+
+Extend Phase 4 error handling.
+
+Potential categories:
+
+`AUTHENTICATION_REQUIRED`
+
+`MARKETPLACE_UNAVAILABLE`
+
+`RATE_LIMITED`
+
+`LISTING_NOT_FOUND`
+
+`MARKETPLACE_REMOVED`
+
+`VALIDATION_ERROR`
+
+`IMAGE_ERROR`
+
+`STALE_JOB`
+
+`CONFLICT`
+
+`DRIFT_DETECTED`
+
+`UNKNOWN`
+
+Errors should be actionable whenever possible.
+
+---
+
+# STEP 38 — Human Approval for Risky Actions
+
+Certain operations should require explicit approval.
+
+Examples:
+
+* Ending listings
+* Deleting listings
+* Replacing all images
+* Accepting marketplace data as canonical
+* Republishing marketplace-removed listings
+* Large bulk price changes
+
+Do not optimize away important human control.
+
+---
+
+# STEP 39 — Website Synchronization
+
+The website should remain the easiest channel because it reads from Supabase directly.
+
+Changes to canonical product data should appear according to the existing website architecture.
+
+Do not create unnecessary browser automation for the website.
+
+If caching exists, ensure updates properly invalidate or refresh relevant cached data.
+
+---
+
+# STEP 40 — Marketplace Polling
+
+Only poll marketplaces where necessary and supported.
+
+Prefer:
+
+* APIs
+* webhooks
+* official events
+* supported marketplace integrations
+
+over constant browser scraping.
+
+If browser-based verification is necessary, keep it conservative.
+
+Do not bypass marketplace security or anti-bot mechanisms.
+
+---
+
+# STEP 41 — Two-Way Data Is NOT the Default
+
+Even after Phase 5, do not create uncontrolled two-way synchronization.
+
+The architecture should remain:
+
+**Supabase → Marketplace**
+
+with:
+
+**Marketplace → Observation / Status / Sales Events**
+
+External marketplace data may inform Supabase.
+
+It should not automatically rewrite canonical product data unless explicitly authorized.
+
+---
+
+# STEP 42 — Reconciliation Report
+
+Generate periodic reconciliation information.
+
+For example:
+
+Total published listings: `350`
+
+In sync: `331`
+
+Updates pending: `8`
+
+Drift detected: `4`
+
+Authentication required: `2`
+
+Listing missing: `1`
+
+Failed: `4`
+
+This makes system health measurable.
+
+---
+
+# STEP 43 — Testing Strategy
+
+Do NOT immediately synchronize the full catalog.
+
+Test progressively.
+
+### Test 1
+
+One product.
+
+One marketplace.
+
+Change only price.
+
+Verify.
+
+### Test 2
+
+One product.
+
+Change title and description.
+
+Verify.
+
+### Test 3
+
+One product.
+
+Multiple marketplaces.
+
+Verify independent updates.
+
+### Test 4
+
+Create marketplace-specific override.
+
+Change canonical value.
+
+Verify override remains intact.
+
+### Test 5
+
+Create intentional drift.
+
+Verify system detects it.
+
+### Test 6
+
+Simulate failed synchronization.
+
+Verify retry behavior.
+
+### Test 7
+
+Simulate stale job.
+
+Verify outdated data is not published.
+
+---
+
+# STEP 44 — Small Batch Test
+
+After individual tests succeed:
+
+Test approximately 5–10 products.
+
+Monitor:
+
+* Job creation
+* Update accuracy
+* Verification
+* Errors
+* Retry behavior
+* Marketplace response
+* Duplicate protection
+* Rate limiting
+
+STOP after the batch.
+
+Show me the results.
+
+Wait for approval before larger synchronization.
+
+---
+
+# STEP 45 — Full Catalog Rollout
+
+Only after approval:
+
+Enable synchronization for the broader catalog.
+
+Use controlled batches.
+
+Do not suddenly generate hundreds or thousands of marketplace operations simultaneously.
+
+---
+
+# STEP 46 — Documentation
+
+Document:
+
+* Canonical data rules
+* Marketplace override rules
+* Synchronization lifecycle
+* Reconciliation logic
+* Drift handling
+* Retry behavior
+* Inventory policies
+* Authentication handling
+* Connector health
+* Marketplace-specific capabilities
+* Human approval requirements
+
+Future developers and agents must be able to understand why the architecture behaves the way it does.
+
+---
+
+# DEFINITION OF DONE
+
+Phase 5 is complete when:
+
+* Supabase remains the canonical product source.
+* Product changes can generate marketplace update jobs.
+* Only relevant marketplaces receive updates.
+* Marketplace-specific overrides are preserved.
+* Changes are verified after synchronization.
+* Drift can be detected.
+* Marketplace listing health can be checked.
+* Failed synchronization is visible.
+* Retry behavior is safe.
+* Stale jobs cannot overwrite newer product data.
+* Authentication problems pause affected operations.
+* Marketplace removal is handled safely.
+* Channel deselection does not automatically delete listings.
+* Inventory architecture is prepared.
+* Product lifecycle states are tracked.
+* The admin panel clearly shows synchronization status.
+* Synchronization history is auditable.
+
+---
+
+# FINAL ARCHITECTURE AFTER PHASE 5
+
+The system should now operate conceptually as:
+
+**Admin Panel**
+
+↓
+
+**Supabase — Single Source of Truth**
+
+↓
+
+**Canonical Product State**
+
+↓
+
+**Change Detection**
+
+↓
+
+**Reconciliation Engine**
+
+↓
+
+**Synchronization Jobs**
+
+↓
+
+**Marketplace Connectors**
+
+↓
+
+**Website | Depop | Vinted | eBay**
+
+↓
+
+**Verification / Marketplace Observation**
+
+↓
+
+**Drift Detection**
+
+↓
+
+**Supabase Marketplace State**
+
+↓
+
+**Admin Dashboard**
+
+At this point, the system no longer simply publishes products.
+
+It actively understands whether each marketplace listing is:
+
+* Published
+* Current
+* Outdated
+* Missing
+* Failed
+* Different from the canonical product
+* Waiting for synchronization
+* Waiting for human attention
+
+---
+
+# IMPORTANT EXECUTION ORDER
+
+Do not immediately implement everything described above.
+
+First:
+
+1. Inspect the completed Phase 4 architecture.
+2. Identify what job infrastructure can be reused.
+3. Identify what marketplace connectors already support updates.
+4. Build a marketplace capability matrix.
+5. Define canonical fields.
+6. Define marketplace override behavior.
+7. Design version/change tracking.
+8. Design reconciliation logic.
+9. Design drift detection.
+10. Design synchronization policies.
+11. Design inventory architecture.
+12. Identify risky/destructive operations.
+13. Present the complete Phase 5 implementation plan.
+14. **STOP AND WAIT FOR MY APPROVAL.**
+
+After approval:
+
+15. Implement change tracking.
+16. Implement synchronization jobs.
+17. Implement ONE update operation for ONE marketplace.
+18. Test one product.
+19. Verify the marketplace result.
+20. Verify Supabase state.
+21. **STOP AND SHOW ME THE RESULT.**
+22. After approval, expand update capabilities.
+23. Test a small batch.
+24. Only then expand to additional marketplaces and the full catalog.
+
+---
+
+# CORE PRINCIPLE
+
+Phase 4 answers:
+
+**"Where should this product be published?"**
+
+Phase 5 answers:
+
+**"Now that it is published, is every selected channel still in the correct state?"**
+
+Supabase remains authoritative.
+
+Marketplaces are distribution channels.
+
+The system should detect differences, synchronize intentionally, verify results, and ask for human approval when an action is ambiguous or destructive.
+
+The final objective is:
+
+**Create once. Manage once. Update once. Distribute everywhere I explicitly choose.**

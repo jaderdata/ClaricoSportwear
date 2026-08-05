@@ -1,0 +1,2440 @@
+# PHASE 8 — AI Product Intelligence, Listing Optimization & Decision Automation
+
+## Project Context
+
+Phases 1 through 7 established the operational and analytical foundation of the commerce platform.
+
+### Phase 1 — Catalog Migration
+
+Existing marketplace listings were extracted and migrated.
+
+### Phase 2 — Central Product Database
+
+Supabase became the central source of truth for product information.
+
+### Phase 3 — Product Management
+
+A private admin panel was created to manage products, images, variants, metadata, and sales-channel selection.
+
+### Phase 4 — Marketplace Publishing
+
+Products can be published to explicitly selected marketplaces.
+
+### Phase 5 — Synchronization & Reconciliation
+
+Marketplace listings can be updated, monitored, reconciled, and verified against canonical Supabase data.
+
+### Phase 6 — Unified Orders & Inventory
+
+Orders from multiple channels can be normalized into Supabase, connected to products, reflected in inventory, and managed through production and fulfillment.
+
+### Phase 7 — Financial Intelligence & Analytics
+
+The system can analyze revenue, costs, fees, margins, product performance, marketplace performance, trends, and profitability.
+
+Phase 8 adds an AI intelligence layer on top of this entire architecture.
+
+The AI layer should not replace the underlying systems.
+
+It should use them.
+
+The core architecture remains:
+
+**Supabase = Single Source of Truth**
+
+AI reads from trusted structured data and produces recommendations, generated content, classifications, rankings, forecasts, and suggested actions.
+
+---
+
+# MAIN OBJECTIVE
+
+Build an AI-powered product and business intelligence layer that helps me:
+
+* Create products faster
+* Generate better listing content
+* Improve marketplace-specific titles and descriptions
+* Generate useful tags and keywords
+* Classify products automatically
+* Improve search metadata
+* Detect weak listings
+* Identify promising products
+* Identify underperforming products
+* Recommend which products to scale
+* Recommend which products to improve
+* Suggest pricing changes
+* Detect opportunities in existing sales data
+* Forecast likely demand
+* Support catalog expansion
+* Reduce repetitive manual work
+
+The AI should behave as an assistant to the business system.
+
+It should not silently make high-impact decisions without control.
+
+---
+
+# CORE PRINCIPLE
+
+AI suggestions and business facts are different things.
+
+The system must always distinguish between:
+
+**Canonical Data**
+
+and:
+
+**AI Suggestions**
+
+Examples:
+
+Canonical price:
+
+`$24.99`
+
+AI recommended price:
+
+`$27.99`
+
+These are NOT the same value.
+
+The AI recommendation should never silently overwrite the canonical price.
+
+Likewise:
+
+Canonical title:
+
+`Brazilian Jiu-Jitsu Black Belt Shirt`
+
+AI Suggested Depop Title:
+
+`Funny BJJ Black Belt Graphic Tee`
+
+The suggestion should require approval before becoming canonical or marketplace-specific data.
+
+---
+
+# STEP 1 — Inspect Existing Architecture
+
+Before implementing Phase 8, inspect:
+
+* Product schema
+* Product images
+* Product tags
+* Search metadata
+* Marketplace overrides
+* Publishing engine
+* Marketplace listing data
+* Order history
+* Sales data
+* Profitability data
+* Product performance metrics
+* Marketplace metrics
+* Inventory data
+* Production data
+* Existing admin interface
+* Existing AI integrations, if any
+
+Do not create a disconnected AI application.
+
+AI should be integrated into the existing admin architecture.
+
+---
+
+# STEP 2 — Define AI Use Cases
+
+Separate AI functionality into specific use cases.
+
+Examples:
+
+### Product Creation Assistant
+
+Help create product metadata.
+
+### Listing Optimization Assistant
+
+Improve marketplace-specific content.
+
+### Classification Assistant
+
+Suggest categories, tags, attributes, and keywords.
+
+### Product Performance Analyst
+
+Analyze sales and profitability.
+
+### Catalog Strategist
+
+Identify products worth scaling or retiring.
+
+### Demand Intelligence
+
+Estimate future demand.
+
+### Search Intelligence
+
+Improve website search metadata and identify missing catalog opportunities.
+
+Each use case should have clear inputs and outputs.
+
+Avoid building one vague "AI assistant" that does everything unpredictably.
+
+---
+
+# STEP 3 — AI-Assisted Product Creation
+
+Inside the Phase 3 product creation workflow, add an optional AI assistance feature.
+
+Possible workflow:
+
+Upload product/design images
+
+↓
+
+AI analyzes available visual and product context
+
+↓
+
+AI suggests:
+
+* Product title
+* Description
+* Tags
+* Keywords
+* Category
+* Subcategory
+* Audience
+* Theme
+* Style
+* Search metadata
+
+↓
+
+User reviews
+
+↓
+
+User approves/edits
+
+↓
+
+Save canonical product
+
+AI-generated content should be editable before saving.
+
+---
+
+# STEP 4 — Image-Based Product Understanding
+
+Where technically appropriate, allow AI to inspect uploaded product/design images.
+
+Potential inferred concepts:
+
+* Theme
+* Text contained in the artwork
+* Subject matter
+* Style
+* Audience
+* Color characteristics
+* Sport/topic association
+* Humor category
+* Possible search terms
+
+Do not assume visual inference is always correct.
+
+Display suggestions as suggestions.
+
+---
+
+# STEP 5 — AI Title Generation
+
+Generate title candidates from canonical product data.
+
+Inputs may include:
+
+* Design theme
+* Product type
+* Audience
+* Category
+* Tags
+* Existing title
+* Marketplace
+* Character limits
+
+Generate separate suggestions for:
+
+* Website
+* Depop
+* Vinted
+* eBay
+
+Do not use exactly the same title strategy for every marketplace.
+
+---
+
+# STEP 6 — Marketplace-Specific Titles
+
+AI should understand that marketplaces have different listing behaviors and constraints.
+
+For example:
+
+Website title may prioritize clarity and brand consistency.
+
+Depop title may prioritize style and discovery.
+
+Vinted title may prioritize product clarity and searchable attributes.
+
+eBay title may prioritize structured keyword coverage.
+
+The AI system should create marketplace-specific suggestions without modifying the canonical title unless explicitly approved.
+
+---
+
+# STEP 7 — Description Generation
+
+Generate descriptions using canonical product data.
+
+Possible elements:
+
+* Product concept
+* Garment type
+* Design description
+* Fit information
+* Material information, if known
+* Production method
+* Size information
+* Care instructions
+* Shipping expectations
+* Relevant keywords
+
+Do not invent factual product details.
+
+If material, fit, garment brand, or production information is unknown, omit it or flag it as missing.
+
+---
+
+# STEP 8 — Marketplace-Specific Descriptions
+
+Support marketplace overrides.
+
+Example:
+
+Canonical description:
+
+Long structured product description.
+
+Depop description:
+
+Shorter discovery-focused description.
+
+Vinted description:
+
+Straightforward item-focused description.
+
+eBay description:
+
+More structured commercial description.
+
+AI should generate suggestions based on actual marketplace requirements and current connector capabilities.
+
+---
+
+# STEP 9 — Tag Generation
+
+Generate tags and keywords from:
+
+* Title
+* Description
+* Images
+* Product category
+* Existing sales data
+* Search data
+
+Possible concepts:
+
+`BJJ`
+
+`Brazilian Jiu-Jitsu`
+
+`Jiu Jitsu`
+
+`Black Belt`
+
+`Martial Arts`
+
+`Grappling`
+
+`Funny Shirt`
+
+`Combat Sports`
+
+Tags should be deduplicated and normalized where practical.
+
+---
+
+# STEP 10 — Search Metadata Generation
+
+Use AI to improve internal website search.
+
+For each product, generate or suggest:
+
+* Keywords
+* Aliases
+* Synonyms
+* Related concepts
+* Common spelling variations
+* Search phrases
+
+Example:
+
+Canonical topic:
+
+`Brazilian Jiu-Jitsu`
+
+Search aliases may include:
+
+`BJJ`
+
+`Jiu Jitsu`
+
+`Brazilian Jiu Jitsu`
+
+`Grappling`
+
+This can improve search without changing product titles.
+
+---
+
+# STEP 11 — Category Classification
+
+AI may suggest categories and subcategories.
+
+Example:
+
+Image + title + description
+
+↓
+
+AI suggestion:
+
+Category:
+
+`Martial Arts`
+
+Subcategory:
+
+`Brazilian Jiu-Jitsu`
+
+Product Type:
+
+`Graphic T-Shirt`
+
+Confidence:
+
+`0.94`
+
+Do not automatically apply low-confidence classifications.
+
+Use configurable confidence thresholds.
+
+---
+
+# STEP 12 — Confidence Scores
+
+Where useful, AI suggestions should include confidence or certainty metadata.
+
+Example:
+
+Category suggestion:
+
+`Brazilian Jiu-Jitsu`
+
+Confidence:
+
+`94%`
+
+Color:
+
+`Black`
+
+Confidence:
+
+`99%`
+
+Audience:
+
+`Men / Unisex`
+
+Confidence:
+
+`61%`
+
+Low-confidence suggestions should receive more human review.
+
+---
+
+# STEP 13 — Bulk AI Enrichment
+
+Support optional bulk processing for existing products.
+
+Examples:
+
+Generate missing tags for 100 products.
+
+Generate search aliases.
+
+Suggest categories.
+
+Identify weak descriptions.
+
+Do not automatically overwrite existing good data.
+
+Bulk AI tasks should generate reviewable suggestions.
+
+---
+
+# STEP 14 — AI Suggestion Storage
+
+Do not overwrite canonical fields immediately.
+
+Create a structured AI suggestion model.
+
+Conceptually:
+
+`ai_suggestions`
+
+Possible fields:
+
+* Suggestion ID
+* Product ID
+* Suggestion type
+* Target marketplace
+* Proposed value
+* Model/version
+* Confidence
+* Created timestamp
+* Status
+* Approved by
+* Approved timestamp
+
+Suggestion statuses may include:
+
+`pending`
+
+`approved`
+
+`rejected`
+
+`edited`
+
+This creates traceability.
+
+---
+
+# STEP 15 — AI Auditability
+
+Record when AI-generated values become canonical.
+
+Example:
+
+AI suggested title
+
+↓
+
+User edited suggestion
+
+↓
+
+User approved
+
+↓
+
+Canonical title updated
+
+Audit event should preserve:
+
+* Original canonical value
+* AI suggestion
+* Final approved value
+* Timestamp
+* User/system actor
+
+---
+
+# STEP 16 — Listing Quality Score
+
+Create an explainable listing-quality evaluation.
+
+Potential dimensions:
+
+* Title quality
+* Description completeness
+* Image completeness
+* Category completeness
+* Tag coverage
+* Marketplace readiness
+* Search metadata
+* Pricing data completeness
+
+Example:
+
+Listing Quality:
+
+`82 / 100`
+
+Reasons:
+
+* Strong title
+* Good images
+* Missing three useful search terms
+* Marketplace category incomplete
+
+Avoid creating arbitrary scores without explanations.
+
+---
+
+# STEP 17 — Marketplace Readiness Assistant
+
+Extend existing readiness validation.
+
+Instead of only saying:
+
+`Vinted → Missing category`
+
+AI may suggest:
+
+`Recommended Vinted category: Men's Clothing > Tops > T-Shirts`
+
+The user can approve the recommendation.
+
+Do not bypass required user review for uncertain marketplace mappings.
+
+---
+
+# STEP 18 — AI Listing Review
+
+Add an action such as:
+
+`Review Listing`
+
+AI analyzes:
+
+* Canonical product
+* Marketplace override
+* Images
+* Tags
+* Performance data
+
+Then returns:
+
+* Issues
+* Suggested improvements
+* Missing fields
+* Better title candidates
+* Better description
+* Keyword suggestions
+
+This should be advisory.
+
+---
+
+# STEP 19 — Performance-Aware Optimization
+
+Once Phase 7 data exists, AI should use real performance information.
+
+Example:
+
+Product A:
+
+High impressions
+
+Low sales
+
+Possible interpretation:
+
+Listing may have weak conversion.
+
+Product B:
+
+Low impressions
+
+High conversion
+
+Possible interpretation:
+
+Product may need better discovery/SEO.
+
+AI should distinguish between discovery and conversion problems where data supports it.
+
+---
+
+# STEP 20 — Do Not Infer Missing Metrics
+
+If impression or click data is unavailable from a marketplace, do not pretend conversion analysis exists.
+
+Use only available evidence.
+
+Clearly label analysis as limited when necessary.
+
+---
+
+# STEP 21 — Product Performance Summaries
+
+AI should be able to generate concise product summaries.
+
+Example:
+
+`This product generated 27 sales in the last 30 days, up 42% from the previous period. Depop drives 70% of sales. Contribution margin is 38%. XL and 2XL account for 54% of units. Refund rate is low.`
+
+These summaries must be generated from structured metrics rather than guessed.
+
+---
+
+# STEP 22 — Product Opportunity Score
+
+Develop a decision-support score for products.
+
+Potential factors:
+
+* Recent sales velocity
+* Revenue growth
+* Contribution margin
+* Refund rate
+* Inventory availability
+* Marketplace coverage
+* Time since launch
+* Search demand
+* Listing quality
+
+Example:
+
+Opportunity Score:
+
+`89 / 100`
+
+Reason:
+
+* Strong growth
+* High margin
+* Low refund rate
+* Only active on one marketplace
+
+Recommended action:
+
+`Consider publishing to additional selected channels.`
+
+The score must be explainable.
+
+---
+
+# STEP 23 — Product Risk Score
+
+Create a separate risk concept.
+
+Potential risk factors:
+
+* Declining sales
+* Low margin
+* High refunds
+* High shipping cost
+* Marketplace restrictions
+* Production bottlenecks
+* Inventory problems
+
+Do not combine opportunity and risk into one opaque number.
+
+---
+
+# STEP 24 — Scale Recommendations
+
+AI may recommend:
+
+`SCALE`
+
+when evidence supports it.
+
+Possible reasons:
+
+* Strong sales growth
+* Strong margin
+* Low refund rate
+* Production capacity available
+* Limited marketplace coverage
+
+Suggested actions may include:
+
+* Publish to another marketplace
+* Increase inventory
+* Create additional variants
+* Create related designs
+* Increase promotion
+
+Do not automatically execute these actions during initial Phase 8.
+
+---
+
+# STEP 25 — Improve Recommendations
+
+Products with signs of potential but weak execution may receive:
+
+`IMPROVE`
+
+Suggestions may include:
+
+* Rewrite title
+* Add tags
+* Improve images
+* Adjust marketplace category
+* Test price
+* Add variants
+
+AI should explain the evidence behind each recommendation.
+
+---
+
+# STEP 26 — Hold Recommendations
+
+For insufficient data:
+
+`HOLD / NEED MORE DATA`
+
+This is important.
+
+The AI should not force a recommendation when a product is too new or has too little traffic/sales data.
+
+---
+
+# STEP 27 — Retire Recommendations
+
+AI may flag products as possible archive candidates.
+
+Potential reasons:
+
+* Long time with zero sales
+* Low margin
+* Repeated marketplace issues
+* High refund rate
+* Better alternatives available
+
+Do NOT automatically archive products.
+
+Require human approval.
+
+---
+
+# STEP 28 — Similar Product Analysis
+
+Use product metadata to identify related products.
+
+Example:
+
+High-performing:
+
+`Funny Black Belt BJJ Shirt`
+
+Potential related opportunities:
+
+`Funny Purple Belt`
+
+`Funny Brown Belt`
+
+`Women's version`
+
+`Hoodie version`
+
+Recommendations should be clearly marked as creative/business hypotheses, not guaranteed opportunities.
+
+---
+
+# STEP 29 — Design Family Intelligence
+
+Group similar designs into families.
+
+Example:
+
+Design family:
+
+`Belt Humor`
+
+Products:
+
+* White Belt
+* Blue Belt
+* Purple Belt
+* Brown Belt
+* Black Belt
+
+Analyze performance across the whole family.
+
+This can reveal whether a concept works beyond a single SKU.
+
+---
+
+# STEP 30 — Catalog Gap Detection
+
+Use website search data and sales data to identify missing opportunities.
+
+Example:
+
+Frequent searches:
+
+`women's BJJ shirt`
+
+but:
+
+Few relevant products
+
+Possible recommendation:
+
+`Catalog gap detected.`
+
+This is more grounded than generating random design ideas.
+
+---
+
+# STEP 31 — No-Result Search Intelligence
+
+Analyze website searches producing zero results.
+
+Rank by frequency.
+
+Example:
+
+`BJJ Mom` — 42 searches
+
+`Kids Jiu Jitsu` — 31 searches
+
+`No Gi` — 26 searches
+
+AI can group similar searches and suggest catalog opportunities.
+
+---
+
+# STEP 32 — Search Query Clustering
+
+Use AI to cluster semantically similar queries.
+
+Example:
+
+`BJJ mom`
+
+`jiu jitsu mom`
+
+`Brazilian jiu jitsu mother`
+
+↓
+
+Cluster:
+
+`BJJ Mom`
+
+This prevents fragmented reporting.
+
+---
+
+# STEP 33 — Trend Detection
+
+Use time-series data to detect meaningful changes.
+
+Examples:
+
+* Sales acceleration
+* Sales decline
+* Marketplace growth
+* Margin deterioration
+* Refund increase
+* Size demand shift
+* Search-interest increase
+
+Do not label normal random noise as a trend.
+
+Use minimum data thresholds.
+
+---
+
+# STEP 34 — Demand Forecasting
+
+Once sufficient historical data exists, introduce basic forecasting.
+
+Possible forecasts:
+
+* Units expected next 7 days
+* Units expected next 30 days
+* Product demand
+* Size demand
+* Blank garment demand
+* Production workload
+
+Start simple.
+
+Do not introduce complex machine learning models before sufficient data exists.
+
+---
+
+# STEP 35 — Forecast Confidence
+
+Forecasts should include uncertainty.
+
+Example:
+
+Expected sales next 30 days:
+
+`42`
+
+Likely range:
+
+`31–55`
+
+Do not present forecasts as guarantees.
+
+---
+
+# STEP 36 — Inventory Forecasting
+
+Use sales velocity and inventory data to estimate stock needs.
+
+Example:
+
+Black XL blanks:
+
+Current stock:
+
+`12`
+
+Expected 30-day demand:
+
+`28`
+
+Recommended reorder:
+
+`20–25`
+
+Consider:
+
+* Lead time
+* Safety stock
+* Production plans
+
+Recommendations should remain advisory initially.
+
+---
+
+# STEP 37 — Production Forecasting
+
+Estimate upcoming production workload.
+
+Example:
+
+Expected next 7 days:
+
+`85 shirts`
+
+Likely size mix:
+
+M: `18`
+
+L: `24`
+
+XL: `26`
+
+2XL: `17`
+
+This can help prepare blanks and transfers.
+
+---
+
+# STEP 38 — Margin-Aware Recommendations
+
+AI must consider profitability.
+
+A product with high sales but poor margin should not automatically receive a "scale" recommendation.
+
+Example:
+
+Sales:
+
+Strong
+
+Contribution margin:
+
+`8%`
+
+Recommendation:
+
+`Review pricing/cost structure before scaling.`
+
+This is a critical rule.
+
+---
+
+# STEP 39 — Marketplace Expansion Recommendations
+
+For products performing well on one marketplace but absent from others:
+
+Example:
+
+Product:
+
+Strong on Depop
+
+Vinted:
+
+Not published
+
+eBay:
+
+Not published
+
+AI may recommend:
+
+`Test Vinted`
+
+or:
+
+`Test eBay`
+
+But it must never automatically select or publish to a new channel without approval.
+
+---
+
+# STEP 40 — Pricing Intelligence
+
+Use historical data to suggest price tests.
+
+Inputs may include:
+
+* Current price
+* Margin
+* Sales velocity
+* Refund rate
+* Marketplace
+* Product age
+* Product cost
+* Historical price changes
+
+Possible output:
+
+Current price:
+
+`$24.99`
+
+Suggested experiment:
+
+`Test $26.99 on Depop`
+
+Reason:
+
+`Strong sales velocity and margin headroom.`
+
+Do not automatically change prices.
+
+---
+
+# STEP 41 — Price Experiment Framework
+
+Treat pricing changes as experiments.
+
+Record:
+
+* Product
+* Marketplace
+* Old price
+* New price
+* Start date
+* End date
+* Sales before
+* Sales during
+* Margin before
+* Margin during
+
+This allows data-driven learning instead of random price changes.
+
+---
+
+# STEP 42 — Listing Experiment Framework
+
+Allow tests such as:
+
+Title A vs revised title
+
+Image order A vs B
+
+Description A vs B
+
+Price A vs B
+
+Not every marketplace supports true A/B testing.
+
+Where parallel testing is not possible, use controlled time-window experiments.
+
+---
+
+# STEP 43 — AI Experiment Suggestions
+
+AI may suggest experiments.
+
+Example:
+
+`This product receives strong traffic but below-average sales. Test a clearer first image and a shorter title before changing price.`
+
+Recommendations should prioritize the most plausible bottleneck.
+
+---
+
+# STEP 44 — Experiment Guardrails
+
+Do not allow the AI to run unlimited uncontrolled experiments.
+
+Set rules such as:
+
+* Maximum active experiments per product
+* Minimum duration
+* Minimum sample size
+* No simultaneous major price/title/image changes unless intentionally designed
+
+Otherwise results become impossible to interpret.
+
+---
+
+# STEP 45 — AI Business Analyst
+
+Add an internal AI analyst interface capable of answering questions from structured business data.
+
+Examples:
+
+`What were my five most profitable products last month?`
+
+`Which marketplace had the best contribution margin?`
+
+`Which designs are growing fastest?`
+
+`Which products have sold nothing in 60 days?`
+
+`Why did profit decrease this week?`
+
+Answers must be grounded in actual Supabase data.
+
+---
+
+# STEP 46 — Explain the Numbers
+
+The AI analyst must be able to show reasoning based on data.
+
+Example:
+
+`Profit declined 12% despite revenue growth because marketplace fees increased, average shipping cost rose, and the sales mix shifted toward lower-margin products.`
+
+The system should cite or link internally to the underlying metrics when possible.
+
+---
+
+# STEP 47 — Prevent Hallucinated Analytics
+
+If required data is missing, say:
+
+`Insufficient data`
+
+rather than fabricating an explanation.
+
+This is critical for financial and business intelligence.
+
+---
+
+# STEP 48 — Daily AI Brief
+
+Create an optional daily summary.
+
+Example:
+
+### Yesterday
+
+Revenue: `$1,420`
+
+Contribution Profit: `$580`
+
+Orders: `51`
+
+### Notable Changes
+
+* Depop sales +18%
+* Vinted margin declined
+* Product X reached highest 7-day velocity
+* Product Y had no sales for 45 days
+* XL blank inventory projected to run low
+
+### Recommended Attention
+
+1. Review Product Y
+2. Reorder XL blanks
+3. Consider expanding Product X to eBay
+
+Do not create noisy summaries full of irrelevant metrics.
+
+---
+
+# STEP 49 — Weekly AI Business Review
+
+Generate a higher-level weekly analysis.
+
+Potential structure:
+
+### What Improved
+
+### What Declined
+
+### Top Products
+
+### Weak Products
+
+### Marketplace Changes
+
+### Margin Changes
+
+### Inventory Risks
+
+### Production Risks
+
+### Catalog Opportunities
+
+### Recommended Experiments
+
+This should complement, not replace, the Phase 7 dashboard.
+
+---
+
+# STEP 50 — AI Action Center
+
+Create a centralized list of recommendations.
+
+Possible statuses:
+
+`new`
+
+`reviewing`
+
+`approved`
+
+`rejected`
+
+`completed`
+
+Examples:
+
+`Add Vinted to Product 123`
+
+`Test $2 price increase on Product 456`
+
+`Add "No Gi" tags to Product 789`
+
+`Review Product 101 — margin below threshold`
+
+Recommendations should never disappear without history.
+
+---
+
+# STEP 51 — Approval Workflow
+
+For AI recommendations that can modify the business:
+
+AI Suggests
+
+↓
+
+Human Reviews
+
+↓
+
+Human Approves
+
+↓
+
+Job Created
+
+↓
+
+Existing system executes
+
+This is important.
+
+The AI should use the existing publishing/synchronization infrastructure rather than directly modifying marketplaces.
+
+---
+
+# STEP 52 — Never Give AI Direct Unrestricted Marketplace Control
+
+AI should not directly:
+
+* Create marketplace listings without authorization
+* Delete listings
+* Change prices
+* Archive products
+* Modify inventory
+* Issue refunds
+* Change canonical product data
+
+without defined permissions and approval rules.
+
+High-impact actions must flow through existing controlled systems.
+
+---
+
+# STEP 53 — Permission Levels
+
+Prepare for configurable AI permissions.
+
+Example:
+
+### Level 1 — Suggest Only
+
+AI can only recommend.
+
+### Level 2 — Draft
+
+AI can prepare changes for approval.
+
+### Level 3 — Auto-Apply Low-Risk Changes
+
+Possible examples:
+
+* Add internal search aliases
+* Add non-destructive metadata
+
+### Level 4 — Controlled Automation
+
+Future possibility for well-tested low-risk workflows.
+
+Start conservatively.
+
+---
+
+# STEP 54 — AI Model Abstraction
+
+Do not hardcode the entire application to one AI provider or one specific model.
+
+Create an abstraction layer.
+
+Conceptually:
+
+`AI Service`
+
+↓
+
+`Text Generation`
+
+`Image Understanding`
+
+`Classification`
+
+`Embeddings`
+
+`Business Analysis`
+
+This makes future model changes easier.
+
+---
+
+# STEP 55 — Prompt Versioning
+
+Store prompt versions for important AI workflows.
+
+Example:
+
+`listing_title_v1`
+
+`listing_title_v2`
+
+`product_analysis_v3`
+
+This allows comparison when output quality changes.
+
+---
+
+# STEP 56 — Model Version Tracking
+
+For stored AI suggestions, record:
+
+* Provider
+* Model
+* Prompt version
+* Timestamp
+* Input reference
+* Output
+
+This makes AI behavior auditable.
+
+---
+
+# STEP 57 — Cost Tracking for AI
+
+Track AI usage where practical.
+
+Metrics:
+
+* Requests
+* Tokens/usage
+* Cost
+* Use case
+* Product
+* Batch
+
+This prevents an AI feature from quietly becoming unnecessarily expensive.
+
+---
+
+# STEP 58 — Cache Reusable AI Outputs
+
+Do not repeatedly regenerate the same content when nothing changed.
+
+If product input and prompt version are unchanged, reuse valid results where appropriate.
+
+This reduces cost and latency.
+
+---
+
+# STEP 59 — Regeneration Rules
+
+AI suggestions should be invalidated or reconsidered when relevant inputs change.
+
+Example:
+
+Product images changed
+
+↓
+
+Old image-derived tags may be stale.
+
+Price changed
+
+↓
+
+Pricing recommendation may need recalculation.
+
+Use explicit invalidation logic.
+
+---
+
+# STEP 60 — Semantic Search Preparation
+
+If appropriate, introduce embeddings for product/search intelligence.
+
+Possible use cases:
+
+* Similar product discovery
+* Semantic website search
+* Product clustering
+* Search query matching
+* Design similarity
+
+Do not replace traditional structured search entirely.
+
+Use hybrid search where appropriate.
+
+---
+
+# STEP 61 — Hybrid Search
+
+Potential search architecture:
+
+Structured filters
+
+*
+
+Full-text search
+
+*
+
+Semantic similarity
+
+This can improve queries such as:
+
+`funny shirt for a black belt`
+
+even if those exact words do not appear in the product title.
+
+Implement only after the simpler search system is working reliably.
+
+---
+
+# STEP 62 — AI Search Re-Ranking
+
+AI may eventually re-rank search results based on relevance.
+
+Do not allow profitability alone to determine relevance.
+
+Search should primarily serve user intent.
+
+Business priorities can be secondary ranking signals where appropriate.
+
+---
+
+# STEP 63 — User Behavior Signals
+
+Where privacy and architecture allow, product recommendations may use aggregate behavior such as:
+
+* Searches
+* Clicks
+* Purchases
+* Product similarity
+
+Do not over-collect personal data.
+
+Prefer aggregate and privacy-conscious analytics.
+
+---
+
+# STEP 64 — Product Recommendation Engine
+
+Future website functionality may support:
+
+`Customers searching for this may also like...`
+
+Use a combination of:
+
+* Product metadata
+* Search relevance
+* Purchase patterns
+* Similarity
+
+Start simple.
+
+Do not introduce a complex recommendation system without enough data.
+
+---
+
+# STEP 65 — Catalog Creation Assistant
+
+AI may assist in generating new product concepts from proven business signals.
+
+Good inputs:
+
+* Existing top designs
+* Search gaps
+* Marketplace demand
+* Customer queries
+* Size/color trends
+
+Poor approach:
+
+Generate random products with no relation to demand.
+
+Recommendations should be grounded in evidence whenever possible.
+
+---
+
+# STEP 66 — Creative Brief Generation
+
+For approved product opportunities, AI can generate a design brief.
+
+Example:
+
+Opportunity:
+
+`BJJ Mom`
+
+Brief may include:
+
+* Target audience
+* Theme
+* Tone
+* Text concept ideas
+* Color suggestions
+* Product format
+* Related keywords
+
+This is a creative aid, not guaranteed market validation.
+
+---
+
+# STEP 67 — Product Launch Assistant
+
+Once a new product is approved, AI can prepare:
+
+* Canonical title
+* Canonical description
+* Tags
+* Search aliases
+* Marketplace titles
+* Marketplace descriptions
+* Suggested categories
+
+Then place them into review state.
+
+This can dramatically reduce manual listing time.
+
+---
+
+# STEP 68 — Product Launch Checklist
+
+AI can verify launch completeness.
+
+Example:
+
+✓ Images
+
+✓ Title
+
+✓ Description
+
+✓ Price
+
+✓ Variants
+
+✓ Tags
+
+✓ Website search metadata
+
+✓ Depop readiness
+
+✓ Vinted readiness
+
+✗ eBay required attribute missing
+
+This should use real validation rules from earlier phases.
+
+---
+
+# STEP 69 — AI Quality Guardrails
+
+Before accepting generated content, validate:
+
+* Required fields
+* Length limits
+* Unsupported claims
+* Duplicate tags
+* Missing factual data
+* Marketplace constraints
+
+AI generation does not bypass normal application validation.
+
+---
+
+# STEP 70 — Duplicate Content Detection
+
+Identify products with unusually similar titles/descriptions.
+
+This can help prevent accidental duplicate catalog entries or repetitive marketplace listings.
+
+Do not automatically merge products.
+
+Flag for review.
+
+---
+
+# STEP 71 — Product Similarity Detection
+
+Use metadata and, if appropriate, embeddings/image features to detect similar designs.
+
+Potential use cases:
+
+* Duplicate detection
+* Design family grouping
+* Related-product recommendations
+* Catalog organization
+
+---
+
+# STEP 72 — Anomaly Detection
+
+Use rules/statistics before complex AI where possible.
+
+Detect unusual events such as:
+
+* Sudden sales spike
+* Sudden sales drop
+* Unexpected refund increase
+* Unexpected marketplace fee increase
+* Abnormal shipping costs
+* Inventory discrepancy
+
+AI can explain anomalies after detection.
+
+---
+
+# STEP 73 — Explainable Recommendations
+
+Every important recommendation should answer:
+
+### What?
+
+What action is suggested?
+
+### Why?
+
+What evidence supports it?
+
+### Expected Benefit
+
+What could improve?
+
+### Risk
+
+What could go wrong?
+
+### Confidence
+
+How strong is the evidence?
+
+Example:
+
+`Recommendation: Test Vinted for Product 123.`
+
+Why:
+
+* Strong Depop sales
+* 42% contribution margin
+* Low refund rate
+* Vinted not currently selected
+
+Confidence:
+
+`Medium`
+
+---
+
+# STEP 74 — Recommendation Ranking
+
+Rank recommendations by potential impact and confidence.
+
+Example:
+
+### High Priority
+
+Inventory shortage risk
+
+### Medium Priority
+
+Price experiment
+
+### Low Priority
+
+Tag improvement
+
+This prevents low-value AI suggestions from overwhelming the admin interface.
+
+---
+
+# STEP 75 — Human Feedback Loop
+
+Allow users to mark AI recommendations:
+
+`Helpful`
+
+`Not Helpful`
+
+`Approved`
+
+`Rejected`
+
+Optionally capture reason.
+
+This data can later improve prompts and recommendation rules.
+
+---
+
+# STEP 76 — Measure AI Impact
+
+Do not assume AI improves the business.
+
+Track outcomes.
+
+Example:
+
+AI suggested title change.
+
+After approval:
+
+Measure:
+
+* Sales
+* Conversion where available
+* Revenue
+* Margin
+
+Compare before vs after.
+
+This helps determine whether the AI feature is actually valuable.
+
+---
+
+# STEP 77 — AI Experiment Analytics
+
+Track:
+
+Recommendation
+
+↓
+
+Action
+
+↓
+
+Outcome
+
+Examples:
+
+`AI price recommendation`
+
+`AI tag recommendation`
+
+`AI marketplace expansion recommendation`
+
+Then measure impact.
+
+This creates a feedback loop based on business results.
+
+---
+
+# STEP 78 — Business Rule Layer
+
+Not every decision should be delegated to AI.
+
+Use deterministic rules when the logic is clear.
+
+Examples:
+
+`If margin < 10%, flag low margin.`
+
+`If inventory = 0, flag out of stock.`
+
+`If listing missing, flag reconciliation issue.`
+
+AI should handle ambiguity, language, pattern interpretation, and prioritization.
+
+Rules should handle known logic.
+
+---
+
+# STEP 79 — Rules + AI Architecture
+
+Preferred architecture:
+
+**Structured Data**
+
+↓
+
+**Business Rules**
+
+↓
+
+**Analytics**
+
+↓
+
+**AI Interpretation**
+
+↓
+
+**Recommendation**
+
+↓
+
+**Human Approval**
+
+↓
+
+**Existing Operational Engine**
+
+This is safer and more reliable than giving raw AI full control.
+
+---
+
+# STEP 80 — AI Admin Dashboard
+
+Add an AI section to the existing admin panel.
+
+Possible sections:
+
+### AI Overview
+
+High-priority recommendations.
+
+### Product Suggestions
+
+Creation and optimization recommendations.
+
+### Listing Improvements
+
+Marketplace-specific listing reviews.
+
+### Opportunities
+
+Products or catalog areas worth testing.
+
+### Risks
+
+Margin, sales, refund, inventory, and listing problems.
+
+### Forecasts
+
+Demand and production outlook.
+
+### Experiments
+
+Active and completed tests.
+
+### AI Activity
+
+Suggestion and approval history.
+
+---
+
+# STEP 81 — Product-Level AI Panel
+
+Inside each product page, display:
+
+* Listing Quality
+* Suggested titles
+* Suggested tags
+* Suggested descriptions
+* Performance summary
+* Opportunity score
+* Risk flags
+* Price suggestions
+* Marketplace expansion suggestions
+* Forecast
+
+This makes AI contextual rather than a separate chatbot with no structure.
+
+---
+
+# STEP 82 — Ask AI About This Product
+
+Provide a contextual product assistant.
+
+Example questions:
+
+`Why are sales slowing?`
+
+`Should I publish this on Vinted?`
+
+`What title would you use on eBay?`
+
+`What should I improve first?`
+
+The AI should automatically receive the relevant product and performance context.
+
+---
+
+# STEP 83 — Global Business AI Assistant
+
+Also provide a broader business analyst.
+
+Example questions:
+
+`What should I focus on this week?`
+
+`Which 10 products should I scale?`
+
+`What products are consuming time without producing profit?`
+
+`Where is my margin leaking?`
+
+`Which marketplace deserves more attention?`
+
+Answers must remain grounded in structured business data.
+
+---
+
+# STEP 84 — Privacy and Security
+
+AI services should receive only the data necessary for each task.
+
+Do not unnecessarily send:
+
+* Customer addresses
+* Sensitive order information
+* Authentication tokens
+* Marketplace credentials
+
+Product intelligence generally does not require private customer data.
+
+Minimize data exposure.
+
+---
+
+# STEP 85 — Financial Safety
+
+AI financial recommendations are decision support.
+
+Do not allow AI to silently:
+
+* Change financial records
+* Delete expenses
+* Modify confirmed marketplace fees
+* Change refund history
+* Rewrite historical order economics
+
+Financial source records remain protected.
+
+---
+
+# STEP 86 — Marketplace Safety
+
+AI must not bypass existing marketplace controls.
+
+All marketplace changes should continue through:
+
+**AI Recommendation**
+
+↓
+
+**Approval**
+
+↓
+
+**Publishing/Sync Job**
+
+↓
+
+**Marketplace Connector**
+
+This preserves auditability.
+
+---
+
+# STEP 87 — AI Failure Handling
+
+If an AI request fails:
+
+Do not block core commerce operations.
+
+The platform must continue functioning without AI.
+
+AI is an enhancement layer, not a critical dependency for:
+
+* Orders
+* Inventory
+* Publishing
+* Fulfillment
+* Payments
+* Core product management
+
+---
+
+# STEP 88 — Graceful Degradation
+
+If AI is unavailable:
+
+Product creation should still work manually.
+
+Search should still work.
+
+Orders should still work.
+
+Marketplace publishing should still work.
+
+Analytics should still work.
+
+This is a critical architectural requirement.
+
+---
+
+# STEP 89 — Testing Strategy
+
+Do not enable AI across the entire catalog immediately.
+
+### Test 1 — One Product
+
+Generate:
+
+* Title
+* Description
+* Tags
+* Category suggestions
+
+Review manually.
+
+### Test 2 — Marketplace Optimization
+
+Generate separate content for one marketplace.
+
+Verify constraints.
+
+### Test 3 — Performance Analysis
+
+Use a product with known sales history.
+
+Compare AI analysis against Phase 7 metrics.
+
+### Test 4 — Recommendation
+
+Choose a known strong product.
+
+Verify recommendation reasoning.
+
+### Test 5 — Weak Product
+
+Choose an underperforming product.
+
+Verify AI does not blindly recommend scaling.
+
+---
+
+# STEP 90 — Batch Test
+
+Select approximately 10 products.
+
+Generate:
+
+* Listing quality analysis
+* Tags
+* Search metadata
+* Optimization recommendations
+
+Review manually.
+
+Measure:
+
+* Accuracy
+* Usefulness
+* Hallucination rate
+* Editing required
+* Cost
+
+Do not enable automatic bulk application yet.
+
+---
+
+# STEP 91 — Business Recommendation Test
+
+Run AI analysis over a limited historical period.
+
+Example:
+
+Last 30 days.
+
+Ask it to identify:
+
+* Top opportunities
+* Low-margin products
+* Marketplace differences
+* Inventory risks
+
+Verify every recommendation against source data.
+
+---
+
+# STEP 92 — Forecast Validation
+
+Do not trust forecasts immediately.
+
+Compare predictions against actual outcomes over time.
+
+Example:
+
+Forecast next 7 days.
+
+Wait for completed period.
+
+Measure error.
+
+Continue only if forecasts become meaningfully useful.
+
+---
+
+# STEP 93 — Recommendation Quality Metrics
+
+Track:
+
+* Recommendations generated
+* Approved
+* Rejected
+* Edited
+* Completed
+* Positive outcome
+* Neutral outcome
+* Negative outcome
+
+This creates an objective measure of AI usefulness.
+
+---
+
+# STEP 94 — Definition of Done
+
+Phase 8 is complete when:
+
+* AI can assist product creation.
+* AI can generate reviewable titles and descriptions.
+* AI can suggest tags and search metadata.
+* Marketplace-specific content can be generated.
+* Suggestions are stored separately from canonical data.
+* AI suggestions are auditable.
+* AI can analyze product performance using real business data.
+* AI can identify opportunities and risks.
+* AI can suggest experiments.
+* AI can support demand forecasting where sufficient data exists.
+* AI can help identify inventory/production risks.
+* Important actions require approval.
+* AI cannot bypass publishing/synchronization controls.
+* AI cannot silently overwrite financial truth.
+* AI can fail without breaking core operations.
+* Recommendation outcomes can be measured.
+
+---
+
+# FINAL ARCHITECTURE AFTER PHASE 8
+
+The full platform now conceptually becomes:
+
+## DATA FOUNDATION
+
+**Supabase — Single Source of Truth**
+
+## PRODUCT SYSTEM
+
+**Admin Panel**
+
+↓
+
+**Canonical Products**
+
+## MARKETPLACE SYSTEM
+
+**Publishing**
+
+↓
+
+**Synchronization**
+
+↓
+
+**Website / Depop / Vinted / eBay**
+
+## ORDER SYSTEM
+
+**Sales Channels**
+
+↓
+
+**Unified Orders**
+
+## OPERATIONS SYSTEM
+
+**Orders**
+
+↓
+
+**Inventory**
+
+↓
+
+**Production**
+
+↓
+
+**Fulfillment**
+
+## FINANCIAL SYSTEM
+
+**Sales + Costs + Fees + Expenses**
+
+↓
+
+**Profitability**
+
+## ANALYTICS SYSTEM
+
+**Products + Orders + Finance + Operations**
+
+↓
+
+**Business Intelligence**
+
+## AI INTELLIGENCE LAYER
+
+**Structured Business Data**
+
+↓
+
+**Rules + Analytics + AI**
+
+↓
+
+**Content Suggestions**
+
+**Listing Optimization**
+
+**Performance Analysis**
+
+**Forecasts**
+
+**Opportunities**
+
+**Risks**
+
+**Experiments**
+
+↓
+
+**Human Approval**
+
+↓
+
+**Existing Operational Systems**
+
+The AI layer should sit on top of the business infrastructure rather than replacing it.
+
+---
+
+# IMPORTANT EXECUTION ORDER
+
+Do NOT immediately implement every AI feature in this document.
+
+First:
+
+1. Inspect the completed Phase 7 architecture.
+2. Identify the highest-value repetitive tasks.
+3. Identify existing structured data available to AI.
+4. Define canonical data vs AI suggestion boundaries.
+5. Design the AI suggestion schema.
+6. Design audit/history behavior.
+7. Design model/provider abstraction.
+8. Define permission levels.
+9. Define approval workflows.
+10. Define privacy rules.
+11. Define measurable success criteria.
+12. Select the first AI use case.
+13. Present the architecture and implementation plan.
+14. **STOP AND WAIT FOR MY APPROVAL.**
+
+Recommended first implementation:
+
+15. Build AI-assisted product metadata generation.
+16. Test with one product.
+17. Review output.
+18. Test with approximately 10 products.
+19. Measure quality and cost.
+20. **STOP AND SHOW ME THE RESULTS.**
+21. After approval, add listing optimization.
+22. Then add performance analysis.
+23. Then add recommendations.
+24. Only after sufficient historical data exists, introduce forecasting.
+
+---
+
+# CORE PRINCIPLE
+
+Phase 7 answers:
+
+**"What is happening financially and operationally?"**
+
+Phase 8 answers:
+
+**"Given everything we know, what should I improve, test, create, scale, or pay attention to next?"**
+
+AI should never become an uncontrolled decision-maker.
+
+It should become a highly informed assistant operating on top of clean data, reliable business rules, measurable outcomes, and explicit human control.
+
+The final objective is:
+
+**Create faster.**
+
+**List better.**
+
+**Understand performance earlier.**
+
+**Find opportunities sooner.**
+
+**Reduce repetitive work.**
+
+**Make better decisions using actual business data.**

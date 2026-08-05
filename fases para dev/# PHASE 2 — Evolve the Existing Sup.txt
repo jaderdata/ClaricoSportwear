@@ -1,0 +1,680 @@
+# PHASE 2 — Evolve the Existing Supabase Database Into the Central Product Database
+
+## Project Context
+
+Phase 1 has already been completed.
+
+During Phase 1, my existing Depop listings were extracted and organized into migration files, including:
+
+* `products.csv`
+* `products.json`
+* `migration_report.json`
+* downloaded product images
+
+These files represent my existing product catalog and will be used as migration input for this phase.
+
+However, this project is **NOT starting from scratch**.
+
+I already have a website under active development.
+
+The website already uses **Supabase as its database**, and the existing Supabase project already contains:
+
+* tables
+* columns
+* rows
+* product-related data
+* images or image references
+* existing relationships
+* application logic that reads from the database
+* existing website functionality
+
+Some parts of the website are already working.
+
+Therefore, **DO NOT create a new Supabase project and DO NOT redesign the entire database from scratch.**
+
+The goal of this phase is to **evolve the existing database safely** so that it becomes the central product database for the entire business.
+
+---
+
+# Long-Term Architecture
+
+The architecture I want to move toward is:
+
+**Supabase = Single Source of Truth**
+
+Supabase should eventually feed:
+
+* My website
+* Depop
+* Vinted
+* eBay
+* Future marketplaces
+* Internal admin tools
+* Search
+* Product management
+* AI-generated product metadata
+* Marketplace publishing automation
+
+The long-term workflow should eventually look like:
+
+**Product created/edited → Supabase → Distribution to selected channels**
+
+However, marketplace publishing automation is NOT part of this phase.
+
+This phase is about preparing the database correctly.
+
+---
+
+# Critical Requirement
+
+The existing website must continue working.
+
+Do not assume that the current database structure is wrong simply because we are adding new capabilities.
+
+Before modifying anything:
+
+1. Inspect the existing project.
+2. Inspect the current Supabase schema.
+3. Understand how the website currently uses the database.
+4. Understand existing relationships.
+5. Identify which existing tables and fields can be reused.
+6. Identify what is missing.
+7. Propose the smallest safe evolution of the current architecture.
+
+Prefer **additive and backward-compatible changes** whenever possible.
+
+Do not delete, rename, or radically restructure existing production/development data unless there is a strong technical reason and I explicitly approve it.
+
+---
+
+# STEP 1 — Inspect the Existing Application
+
+Start by analyzing the existing website codebase.
+
+Determine:
+
+* Framework and application architecture
+* How Supabase is configured
+* How the application queries Supabase
+* Existing product-related components
+* Existing search functionality
+* Existing product pages
+* Existing image handling
+* Existing storage buckets
+* Existing authentication or admin functionality
+* Existing API routes or server functions
+* Existing database types/interfaces
+* Existing product creation/editing workflows
+
+Document what already exists before proposing changes.
+
+Do NOT modify anything yet.
+
+---
+
+# STEP 2 — Inspect the Existing Supabase Database
+
+Analyze the current Supabase schema.
+
+Identify all tables related to:
+
+* products
+* designs
+* images
+* categories
+* collections
+* tags
+* variants
+* sizes
+* colors
+* inventory
+* pricing
+* search
+* users
+* marketplace data
+
+For each relevant table, document:
+
+* table name
+* purpose
+* primary key
+* important columns
+* foreign keys
+* indexes
+* constraints
+* relationships
+* whether the website currently depends on it
+
+Also inspect:
+
+* Supabase Storage buckets
+* Row Level Security policies
+* database functions
+* triggers
+* views
+* generated columns
+* search indexes
+* migrations
+
+The purpose is to understand the current system before changing it.
+
+---
+
+# STEP 3 — Analyze the Depop Migration Dataset
+
+Inspect the Phase 1 migration output:
+
+`products.json`
+
+`products.csv`
+
+`migration_report.json`
+
+and the downloaded images.
+
+Compare the extracted Depop data with the current Supabase schema.
+
+Create a field-mapping analysis.
+
+For example:
+
+Depop title → existing product field
+
+Depop description → existing description field
+
+Depop price → pricing structure
+
+Depop size → variant/size structure
+
+Depop images → product image structure
+
+Depop category → category structure
+
+Depop tags → search/tag structure
+
+Depop listing ID → marketplace listing structure
+
+Depop URL → marketplace listing structure
+
+Do NOT force Depop-specific fields into the core product table if they logically belong to marketplace metadata.
+
+---
+
+# STEP 4 — Separate Product Data From Marketplace Data
+
+This distinction is extremely important.
+
+The database should distinguish between:
+
+### Core Product Data
+
+Information describing the actual product.
+
+Examples:
+
+* internal product ID
+* title
+* description
+* design
+* images
+* category
+* tags
+* colors
+* sizes
+* variants
+* base price
+* search metadata
+* status
+* created date
+* updated date
+
+### Marketplace Listing Data
+
+Information describing how that product exists on a specific marketplace.
+
+Examples:
+
+* marketplace
+* external listing ID
+* external listing URL
+* marketplace-specific title
+* marketplace-specific description
+* marketplace-specific price
+* marketplace category
+* marketplace status
+* publication status
+* last synchronization date
+* marketplace metadata
+
+A single product may eventually have:
+
+**1 internal product**
+
+connected to:
+
+**1 website listing**
+
+**1 Depop listing**
+
+**1 Vinted listing**
+
+**1 eBay listing**
+
+and potentially other marketplace listings.
+
+Do not create duplicate products simply because the same product exists on multiple marketplaces.
+
+---
+
+# STEP 5 — Design the Target Database Evolution
+
+After understanding the current system, propose how the existing schema should evolve.
+
+Possible logical entities may include:
+
+`products`
+
+`product_images`
+
+`product_variants`
+
+`categories`
+
+`tags`
+
+`product_tags`
+
+`marketplaces`
+
+`marketplace_listings`
+
+`marketplace_sync_jobs`
+
+`marketplace_sync_logs`
+
+However:
+
+**These names are suggestions, not requirements.**
+
+If equivalent structures already exist in the database, reuse or extend them.
+
+Do not create duplicate tables simply because these names appear in this prompt.
+
+The architecture should adapt to the existing system.
+
+---
+
+# STEP 6 — Preserve the Existing Website
+
+The current website is already under development and already uses this database.
+
+The database evolution must therefore be backward-compatible whenever reasonably possible.
+
+Before changing any existing column or relationship, determine:
+
+* Where it is used in the codebase
+* Whether changing it would break existing queries
+* Whether existing UI components depend on it
+* Whether existing records depend on it
+
+Prefer:
+
+**existing structure + extensions**
+
+instead of:
+
+**delete existing structure + rebuild**
+
+The objective is evolution, not replacement.
+
+---
+
+# STEP 7 — Prepare for the Website Search Architecture
+
+The website will NOT necessarily display every product as a giant traditional catalog.
+
+Search is intended to be a major part of the user experience.
+
+A user should eventually be able to search for something such as:
+
+`Brazilian Jiu-Jitsu`
+
+`funny BJJ shirt`
+
+`women's jiu-jitsu`
+
+`black belt`
+
+`Florida`
+
+or other concepts.
+
+The system should return relevant designs/products.
+
+Therefore, evaluate whether the database should support:
+
+* tags
+* keywords
+* categories
+* aliases
+* searchable text
+* full-text search
+* search vectors
+* ranking
+* design attributes
+* semantic search in the future
+
+Do not overengineer semantic/AI search during this phase.
+
+Just make sure the data model does not prevent us from adding better search later.
+
+---
+
+# STEP 8 — Prepare for Future Multi-Channel Publishing
+
+Eventually, I want the following workflow:
+
+I create a product once.
+
+The product is stored in Supabase.
+
+Then I can choose where it should be published:
+
+* Website
+* Depop
+* Vinted
+* eBay
+* Future marketplaces
+
+The system should eventually know the status of each channel independently.
+
+Conceptually:
+
+Product A
+
+Website → Active
+
+Depop → Active
+
+Vinted → Not Published
+
+eBay → Not Published
+
+Future Marketplace → Not Published
+
+Later, publishing agents will use this information.
+
+Do NOT build those agents during this phase.
+
+Only make sure the database architecture can support them later.
+
+---
+
+# STEP 9 — Prepare for Future Publishing Jobs
+
+The future architecture may use a job queue.
+
+For example:
+
+`publish product 123 to Depop`
+
+`publish product 123 to Vinted`
+
+`update product 123 on Depop`
+
+`update price on Vinted`
+
+`remove listing from marketplace`
+
+Jobs may eventually have statuses such as:
+
+* pending
+* processing
+* completed
+* failed
+* retrying
+
+Do not implement the full automation system now unless a minimal structure is necessary for the database architecture.
+
+The goal is simply to avoid designing ourselves into a corner.
+
+---
+
+# STEP 10 — Image Architecture
+
+Review how images currently work in the website.
+
+Determine:
+
+* where existing images are stored
+* whether Supabase Storage is being used
+* how image URLs are stored
+* whether products support multiple images
+* how image ordering works
+* whether images are shared between variants
+
+The Phase 1 Depop migration contains downloaded images.
+
+Design a safe way to eventually migrate these images into the existing image architecture.
+
+Do not create duplicate storage systems unnecessarily.
+
+Ideally, Supabase should eventually contain or reference the canonical product images.
+
+Marketplace agents can later use those images when creating listings.
+
+---
+
+# STEP 11 — IDs and External IDs
+
+Internal product identity must be independent from marketplace identity.
+
+For example:
+
+Internal product ID:
+
+`product_uuid`
+
+Depop listing ID:
+
+`depop_listing_id`
+
+Vinted listing ID:
+
+`vinted_listing_id`
+
+eBay listing ID:
+
+`ebay_listing_id`
+
+Do not use a Depop ID as the primary identity of the product itself.
+
+Depop is only one sales channel.
+
+The internal Supabase product ID should remain the canonical identity.
+
+---
+
+# STEP 12 — Migration Safety
+
+Before importing the full Depop dataset:
+
+Create a safe migration plan.
+
+The migration must be:
+
+* repeatable where possible
+* idempotent where practical
+* traceable
+* recoverable
+* protected against duplicates
+
+Use the Depop Listing ID to identify already-imported Depop listings.
+
+If the migration is executed twice, it should not create duplicate products without warning.
+
+---
+
+# STEP 13 — Test Migration
+
+Do NOT immediately import all ~130 products.
+
+First select the same small test dataset from Phase 1.
+
+Import approximately **5 products**.
+
+Verify:
+
+* products
+* descriptions
+* images
+* prices
+* variants
+* sizes
+* categories
+* tags
+* marketplace metadata
+* Depop IDs
+* Depop URLs
+
+Then test the existing website.
+
+Confirm that existing functionality still works.
+
+Check for:
+
+* broken queries
+* broken product pages
+* missing images
+* TypeScript/type errors
+* search issues
+* unexpected null values
+* relationship errors
+
+STOP after this test.
+
+Show me the results.
+
+Wait for my approval before importing the complete Depop dataset.
+
+---
+
+# STEP 14 — Full Migration
+
+Only after I approve the test:
+
+Import the remaining Depop catalog.
+
+Avoid duplicates.
+
+Preserve existing website data.
+
+Preserve marketplace metadata.
+
+Upload or migrate images according to the architecture approved during the test.
+
+After completion, generate a migration report containing:
+
+* existing products before migration
+* Depop products analyzed
+* products imported
+* products matched to existing records
+* duplicates prevented
+* images migrated
+* errors
+* warnings
+* final product count
+
+---
+
+# STEP 15 — Documentation
+
+Create documentation explaining the resulting architecture.
+
+Include:
+
+### Current architecture
+
+How the website and Supabase work after this phase.
+
+### Product architecture
+
+Where canonical product information lives.
+
+### Marketplace architecture
+
+How marketplace listings relate to products.
+
+### Image architecture
+
+Where canonical images live.
+
+### Search architecture
+
+How products are prepared for search.
+
+### Future publishing architecture
+
+How future agents should interact with the database.
+
+This documentation is important because future development phases will build on this architecture.
+
+---
+
+# IMPORTANT — DO NOT BUILD MARKETPLACE AUTOMATION YET
+
+This phase should NOT:
+
+* automatically publish to Depop
+* automatically publish to Vinted
+* automatically publish to eBay
+* automatically modify existing Depop listings
+* create marketplace browser automation
+* build the final synchronization engine
+
+Those will be separate phases.
+
+---
+
+# Execution Strategy
+
+Work in this order:
+
+1. Inspect existing website.
+2. Inspect existing Supabase architecture.
+3. Inspect Phase 1 Depop migration files.
+4. Map Depop fields to the existing database.
+5. Identify architectural gaps.
+6. Design the smallest safe database evolution.
+7. Present the proposed architecture to me.
+8. Present any SQL migrations/schema changes that would be required.
+9. Explain potential breaking changes or risks.
+10. **STOP and wait for my approval.**
+11. Only after approval, implement the database changes.
+12. Test with approximately 5 migrated Depop products.
+13. Test the existing website.
+14. **STOP again and wait for my approval.**
+15. After approval, migrate the remaining catalog.
+16. Document the resulting architecture.
+
+---
+
+# Core Principle
+
+Do not treat this as a new project.
+
+Treat this as an **evolution of an existing working project**.
+
+The website already exists.
+
+The Supabase database already exists.
+
+Existing data already exists.
+
+Existing application logic already exists.
+
+Preserve what works.
+
+Extend what is missing.
+
+The final objective is to transform the existing Supabase database into the **central product source of truth for my website and all future sales channels**, without unnecessarily rebuilding the website or destroying the work that has already been completed.

@@ -41,8 +41,10 @@ CREATE POLICY "Allow public select by protocol on cs_quote_requests"
 -- Deny public update and delete on quote requests (Admin / Service Role only)
 DROP POLICY IF EXISTS "Allow public update on cs_quote_requests" ON public.cs_quote_requests;
 DROP POLICY IF EXISTS "Allow public delete on cs_quote_requests" ON public.cs_quote_requests;
+DROP POLICY IF EXISTS "Allow admin update on cs_quote_requests" ON public.cs_quote_requests;
+DROP POLICY IF EXISTS "Allow admin delete on cs_quote_requests" ON public.cs_quote_requests;
 
-CREATE POLICY "Allow admin update on cs_quote_requests" 
+CREATE POLICY "Allow admin update on cs_quote_requests"
     ON public.cs_quote_requests 
     FOR UPDATE 
     TO authenticated 
@@ -92,8 +94,11 @@ CREATE POLICY "Allow public select on cs_products"
 DROP POLICY IF EXISTS "Allow public insert on cs_products" ON public.cs_products;
 DROP POLICY IF EXISTS "Allow public update on cs_products" ON public.cs_products;
 DROP POLICY IF EXISTS "Allow public delete on cs_products" ON public.cs_products;
+DROP POLICY IF EXISTS "Allow admin insert on cs_products" ON public.cs_products;
+DROP POLICY IF EXISTS "Allow admin update on cs_products" ON public.cs_products;
+DROP POLICY IF EXISTS "Allow admin delete on cs_products" ON public.cs_products;
 
-CREATE POLICY "Allow admin insert on cs_products" 
+CREATE POLICY "Allow admin insert on cs_products"
     ON public.cs_products 
     FOR INSERT 
     TO authenticated 
@@ -246,3 +251,311 @@ CREATE POLICY "Allow admin delete on cs_partner_academies"
     FOR DELETE
     TO authenticated
     USING (true);
+
+
+-- =====================================================================
+-- PHASE 2 — D2C Storefront (products migrated from Depop) + Shopping Cart
+-- Additive evolution: does NOT modify cs_products (B2B quote catalog),
+-- which keeps powering the existing quote-request workflow untouched.
+-- =====================================================================
+
+-- 8. Store Products — canonical D2C product (= one design / Depop "product_group")
+CREATE TABLE IF NOT EXISTS public.cs_store_products (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    description TEXT,
+    category TEXT,
+    subcategory TEXT,
+    brand TEXT,
+    condition TEXT,
+    material TEXT,
+    status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'archived'))
+);
+
+ALTER TABLE public.cs_store_products ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public select on cs_store_products" ON public.cs_store_products;
+CREATE POLICY "Allow public select on cs_store_products"
+    ON public.cs_store_products
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS "Allow admin insert on cs_store_products" ON public.cs_store_products;
+CREATE POLICY "Allow admin insert on cs_store_products"
+    ON public.cs_store_products
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin update on cs_store_products" ON public.cs_store_products;
+CREATE POLICY "Allow admin update on cs_store_products"
+    ON public.cs_store_products
+    FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin delete on cs_store_products" ON public.cs_store_products;
+CREATE POLICY "Allow admin delete on cs_store_products"
+    ON public.cs_store_products
+    FOR DELETE
+    TO authenticated
+    USING (true);
+
+
+-- 9. Store Product Variants — 1 row per Depop listing (its own size/color/price/stock)
+CREATE TABLE IF NOT EXISTS public.cs_store_product_variants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    product_id UUID NOT NULL REFERENCES public.cs_store_products(id) ON DELETE CASCADE,
+    size TEXT,
+    color TEXT,
+    price NUMERIC(10,2) NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'USD',
+    quantity INTEGER,
+    sku TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_cs_store_product_variants_product_id ON public.cs_store_product_variants(product_id);
+
+ALTER TABLE public.cs_store_product_variants ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public select on cs_store_product_variants" ON public.cs_store_product_variants;
+CREATE POLICY "Allow public select on cs_store_product_variants"
+    ON public.cs_store_product_variants
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS "Allow admin insert on cs_store_product_variants" ON public.cs_store_product_variants;
+CREATE POLICY "Allow admin insert on cs_store_product_variants"
+    ON public.cs_store_product_variants
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin update on cs_store_product_variants" ON public.cs_store_product_variants;
+CREATE POLICY "Allow admin update on cs_store_product_variants"
+    ON public.cs_store_product_variants
+    FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin delete on cs_store_product_variants" ON public.cs_store_product_variants;
+CREATE POLICY "Allow admin delete on cs_store_product_variants"
+    ON public.cs_store_product_variants
+    FOR DELETE
+    TO authenticated
+    USING (true);
+
+
+-- 10. Store Product Images — per variant, preserves Depop's per-listing image sets
+CREATE TABLE IF NOT EXISTS public.cs_store_product_images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    variant_id UUID NOT NULL REFERENCES public.cs_store_product_variants(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL DEFAULT 1,
+    storage_path TEXT,
+    source_url TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_cs_store_product_images_variant_id ON public.cs_store_product_images(variant_id);
+
+ALTER TABLE public.cs_store_product_images ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public select on cs_store_product_images" ON public.cs_store_product_images;
+CREATE POLICY "Allow public select on cs_store_product_images"
+    ON public.cs_store_product_images
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS "Allow admin insert on cs_store_product_images" ON public.cs_store_product_images;
+CREATE POLICY "Allow admin insert on cs_store_product_images"
+    ON public.cs_store_product_images
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin update on cs_store_product_images" ON public.cs_store_product_images;
+CREATE POLICY "Allow admin update on cs_store_product_images"
+    ON public.cs_store_product_images
+    FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin delete on cs_store_product_images" ON public.cs_store_product_images;
+CREATE POLICY "Allow admin delete on cs_store_product_images"
+    ON public.cs_store_product_images
+    FOR DELETE
+    TO authenticated
+    USING (true);
+
+
+-- 11. Store Product Tags — search metadata / keywords per product
+CREATE TABLE IF NOT EXISTS public.cs_store_product_tags (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID NOT NULL REFERENCES public.cs_store_products(id) ON DELETE CASCADE,
+    tag TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_cs_store_product_tags_product_id ON public.cs_store_product_tags(product_id);
+
+ALTER TABLE public.cs_store_product_tags ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public select on cs_store_product_tags" ON public.cs_store_product_tags;
+CREATE POLICY "Allow public select on cs_store_product_tags"
+    ON public.cs_store_product_tags
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS "Allow admin insert on cs_store_product_tags" ON public.cs_store_product_tags;
+CREATE POLICY "Allow admin insert on cs_store_product_tags"
+    ON public.cs_store_product_tags
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin delete on cs_store_product_tags" ON public.cs_store_product_tags;
+CREATE POLICY "Allow admin delete on cs_store_product_tags"
+    ON public.cs_store_product_tags
+    FOR DELETE
+    TO authenticated
+    USING (true);
+
+
+-- 12. Marketplace Listings — external identity per variant+channel, separate from internal identity.
+-- UNIQUE(marketplace, external_listing_id) guarantees re-running the migration never duplicates a listing.
+CREATE TABLE IF NOT EXISTS public.cs_marketplace_listings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    variant_id UUID NOT NULL REFERENCES public.cs_store_product_variants(id) ON DELETE CASCADE,
+    marketplace TEXT NOT NULL,
+    external_listing_id TEXT,
+    external_url TEXT,
+    status TEXT NOT NULL DEFAULT 'not_published',
+    last_synced_at TIMESTAMPTZ,
+    -- Per-channel overrides. NULL = inherit the canonical value from cs_store_products /
+    -- cs_store_product_variants (effective_value = override ?? canonical). Lets Depop, Vinted,
+    -- eBay, etc. diverge intentionally from the canonical title/description/price without
+    -- duplicating the product, and without needing a schema change per marketplace.
+    title_override TEXT,
+    description_override TEXT,
+    price_override NUMERIC(10,2),
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    UNIQUE (marketplace, external_listing_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cs_marketplace_listings_variant_id ON public.cs_marketplace_listings(variant_id);
+
+ALTER TABLE public.cs_marketplace_listings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public select on cs_marketplace_listings" ON public.cs_marketplace_listings;
+CREATE POLICY "Allow public select on cs_marketplace_listings"
+    ON public.cs_marketplace_listings
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS "Allow admin insert on cs_marketplace_listings" ON public.cs_marketplace_listings;
+CREATE POLICY "Allow admin insert on cs_marketplace_listings"
+    ON public.cs_marketplace_listings
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin update on cs_marketplace_listings" ON public.cs_marketplace_listings;
+CREATE POLICY "Allow admin update on cs_marketplace_listings"
+    ON public.cs_marketplace_listings
+    FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow admin delete on cs_marketplace_listings" ON public.cs_marketplace_listings;
+CREATE POLICY "Allow admin delete on cs_marketplace_listings"
+    ON public.cs_marketplace_listings
+    FOR DELETE
+    TO authenticated
+    USING (true);
+
+
+-- 13. Shopping Cart — guest carts identified by an unguessable session token stored in a cookie
+-- (same "possession of the token is the credential" pattern already used for cs_quote_requests
+-- protocol lookups above). No payment/shipping data yet — added in a later phase.
+CREATE TABLE IF NOT EXISTS public.cs_carts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    session_token TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'abandoned', 'converted'))
+);
+
+ALTER TABLE public.cs_carts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public insert on cs_carts" ON public.cs_carts;
+CREATE POLICY "Allow public insert on cs_carts"
+    ON public.cs_carts
+    FOR INSERT
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public select on cs_carts" ON public.cs_carts;
+CREATE POLICY "Allow public select on cs_carts"
+    ON public.cs_carts
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS "Allow public update on cs_carts" ON public.cs_carts;
+CREATE POLICY "Allow public update on cs_carts"
+    ON public.cs_carts
+    FOR UPDATE
+    USING (true)
+    WITH CHECK (true);
+
+
+CREATE TABLE IF NOT EXISTS public.cs_cart_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cart_id UUID NOT NULL REFERENCES public.cs_carts(id) ON DELETE CASCADE,
+    variant_id UUID NOT NULL REFERENCES public.cs_store_product_variants(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+    unit_price NUMERIC(10,2) NOT NULL,
+    UNIQUE (cart_id, variant_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cs_cart_items_cart_id ON public.cs_cart_items(cart_id);
+
+ALTER TABLE public.cs_cart_items ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public select on cs_cart_items" ON public.cs_cart_items;
+CREATE POLICY "Allow public select on cs_cart_items"
+    ON public.cs_cart_items
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert on cs_cart_items" ON public.cs_cart_items;
+CREATE POLICY "Allow public insert on cs_cart_items"
+    ON public.cs_cart_items
+    FOR INSERT
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update on cs_cart_items" ON public.cs_cart_items;
+CREATE POLICY "Allow public update on cs_cart_items"
+    ON public.cs_cart_items
+    FOR UPDATE
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public delete on cs_cart_items" ON public.cs_cart_items;
+CREATE POLICY "Allow public delete on cs_cart_items"
+    ON public.cs_cart_items
+    FOR DELETE
+    USING (true);
+
+
+-- 14. Storage: reuse the existing public "product-images" bucket for migrated Depop images.
+-- Images are written under the "store/{product-slug}/{variant-id}/..." path prefix so they
+-- never collide with the admin's existing "front_*" / "back_*" uploads for cs_products.
+-- No new bucket or storage policy needed — see section 6 above.

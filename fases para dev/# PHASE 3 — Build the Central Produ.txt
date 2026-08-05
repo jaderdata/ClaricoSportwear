@@ -1,0 +1,874 @@
+# PHASE 3 — Build the Central Product Management & Publishing Control Panel
+
+## Project Context
+
+Phase 1 and Phase 2 have already established the foundation of this project.
+
+### Phase 1 — Depop Extraction
+
+My existing Depop listings were extracted and organized into migration files containing product information, marketplace metadata, and images.
+
+### Phase 2 — Database Evolution
+
+My existing website and existing Supabase database were analyzed and evolved without rebuilding the project from scratch.
+
+Supabase is now being established as the **Single Source of Truth** for product information.
+
+The architecture is moving toward:
+
+**Admin Panel → Supabase → Website / Marketplaces**
+
+Now we need to build the interface that I will actually use to manage this system.
+
+---
+
+# Main Objective
+
+Build a private **Product Management & Publishing Control Panel** inside my existing website/application.
+
+From this point forward, I should NOT need to create a product manually inside Depop first.
+
+Instead, the workflow should become:
+
+**Create Product → Save to Supabase → Select Sales Channels → Publish Later**
+
+The administrative panel becomes the place where products originate.
+
+Supabase remains the actual source of truth.
+
+The admin panel is simply the interface I use to manage that data.
+
+---
+
+# IMPORTANT ARCHITECTURAL PRINCIPLE
+
+Do NOT create a separate application unless there is a strong technical reason.
+
+The admin panel should preferably be integrated into my existing website/project.
+
+Reuse:
+
+* existing framework
+* existing Supabase connection
+* existing authentication
+* existing components
+* existing design system
+* existing database types
+* existing storage architecture
+* existing utilities
+
+Do not duplicate infrastructure that already exists.
+
+---
+
+# STEP 1 — Inspect the Current Project Before Building
+
+Before implementing the admin panel, inspect the current project again.
+
+Identify:
+
+* Current framework
+* Routing architecture
+* Authentication system
+* Existing admin functionality
+* Existing product components
+* Existing forms
+* Existing image upload logic
+* Existing Supabase utilities
+* Existing UI components
+* Existing design system
+* Existing TypeScript types
+* Existing database schema after Phase 2
+
+Reuse existing architecture whenever possible.
+
+Do not build parallel systems unnecessarily.
+
+---
+
+# STEP 2 — Create a Protected Admin Area
+
+Create a private administrative area inside the existing application.
+
+Conceptually, this may live somewhere such as:
+
+`/admin`
+
+The exact route should follow the architecture already used by the project.
+
+This area must NOT be publicly accessible.
+
+Use the existing authentication system if one already exists.
+
+Do not create a completely new authentication architecture unless necessary.
+
+The admin area should eventually contain:
+
+* Dashboard
+* Products
+* Create Product
+* Edit Product
+* Marketplace Status
+* Publishing Queue
+* Errors / Logs
+
+Some of these sections may initially be placeholders for future phases.
+
+---
+
+# STEP 3 — Product Dashboard
+
+Create a central product dashboard.
+
+I should be able to see the products currently stored in Supabase.
+
+The dashboard should support:
+
+* Product thumbnail
+* Product title
+* Internal product ID
+* Status
+* Base price
+* Category
+* Date created
+* Date updated
+* Website status
+* Depop status
+* Vinted status
+* eBay status
+
+The marketplace columns are primarily informational during this phase.
+
+Do NOT implement marketplace automation yet.
+
+---
+
+# STEP 4 — Search and Filtering
+
+The admin product dashboard should support fast searching.
+
+Allow searching by relevant fields such as:
+
+* Product title
+* Internal ID
+* Keywords
+* Tags
+* Category
+* Marketplace listing ID, if available
+
+Add useful filters such as:
+
+* Active
+* Draft
+* Archived
+* Published on website
+* Published on Depop
+* Published on Vinted
+* Published on eBay
+* Not published anywhere
+* Missing information
+
+The exact filters should adapt to the database architecture created in Phase 2.
+
+---
+
+# STEP 5 — Create Product Workflow
+
+Create a clear **New Product** workflow.
+
+This becomes the new starting point for products.
+
+Instead of:
+
+**Create on Depop → Copy somewhere else**
+
+the workflow becomes:
+
+**Create in Admin Panel → Save to Supabase → Distribute later**
+
+The form should support all relevant core product information available in the Phase 2 schema.
+
+Potential fields include:
+
+* Title
+* Description
+* Base price
+* Category
+* Subcategory
+* Brand
+* Product type
+* Condition
+* Colors
+* Sizes
+* Variants
+* Tags
+* Keywords
+* Search metadata
+* Internal notes
+* Product status
+
+Do not blindly create fields from this list if equivalent fields already exist.
+
+Use the actual Phase 2 schema.
+
+---
+
+# STEP 6 — Image Management
+
+The product creation interface must support product images.
+
+Allow:
+
+* Multiple image upload
+* Image preview
+* Image reordering
+* Image deletion
+* Primary/cover image selection
+
+Use the existing Supabase Storage architecture from Phase 2.
+
+Do not create a separate image storage system.
+
+Images stored here should become the canonical product images that future marketplace publishers can use.
+
+The same canonical image should eventually be reusable for:
+
+* Website
+* Depop
+* Vinted
+* eBay
+* Future marketplaces
+
+---
+
+# STEP 7 — Product Variants
+
+If the current product architecture supports variants, provide a clean way to manage them.
+
+Examples:
+
+* Size
+* Color
+* Garment type
+* SKU
+* Price adjustment
+* Availability
+
+Do not overcomplicate the UI.
+
+The objective is fast product creation.
+
+I expect to manage a potentially large number of products, so repetitive work should be minimized.
+
+---
+
+# STEP 8 — Tags and Search Metadata
+
+Because search will be important on my website, make tags and searchable metadata easy to manage.
+
+For example, a product may contain concepts such as:
+
+`Brazilian Jiu-Jitsu`
+
+`BJJ`
+
+`Jiu-Jitsu`
+
+`Black Belt`
+
+`Funny`
+
+`Martial Arts`
+
+`Florida`
+
+These tags may eventually help:
+
+* Website search
+* Product discovery
+* AI recommendations
+* Marketplace SEO
+* Marketplace publishing
+
+Do not build advanced semantic search in this phase.
+
+Just provide clean management of the underlying metadata.
+
+---
+
+# STEP 9 — Product Status
+
+Every product should have a clear internal lifecycle.
+
+Use the status architecture created during Phase 2.
+
+Conceptually, statuses may include:
+
+* Draft
+* Ready
+* Active
+* Archived
+
+For example:
+
+### Draft
+
+Product is incomplete.
+
+### Ready
+
+Product information is complete and ready for distribution.
+
+### Active
+
+Product is available through at least one sales channel.
+
+### Archived
+
+Product should no longer be actively sold.
+
+Adapt these statuses to the existing schema instead of creating duplicate concepts.
+
+---
+
+# STEP 10 — Sales Channel Selection
+
+This is one of the most important parts of Phase 3.
+
+When creating or editing a product, I should be able to indicate where I eventually want the product published.
+
+For example:
+
+**Sales Channels**
+
+☑ Website
+
+☑ Depop
+
+☐ Vinted
+
+☐ eBay
+
+The exact interface may use checkboxes, toggles, or another appropriate UI.
+
+IMPORTANT:
+
+Selecting a marketplace during Phase 3 should NOT automatically launch browser automation or publish the listing.
+
+At this stage, it should simply store my publishing intent in Supabase.
+
+For example:
+
+`Website → Selected`
+
+`Depop → Selected`
+
+`Vinted → Selected`
+
+`eBay → Not Selected`
+
+The automation engine will process these selections in a later phase.
+
+---
+
+# STEP 11 — Separate Intent From Actual Marketplace Status
+
+Do not confuse:
+
+**Where I WANT the product published**
+
+with:
+
+**Where the product IS currently published**
+
+These must be separate concepts.
+
+Example:
+
+Product 123
+
+Desired Channels:
+
+Website → YES
+
+Depop → YES
+
+Vinted → YES
+
+eBay → NO
+
+Actual Status:
+
+Website → Active
+
+Depop → Active
+
+Vinted → Not Published
+
+eBay → Not Published
+
+This distinction will be extremely important once automation begins.
+
+---
+
+# STEP 12 — Marketplace Status Display
+
+On the product page, display the current marketplace state.
+
+For example:
+
+### Website
+
+Active
+
+### Depop
+
+Published
+
+External Listing ID: `123456`
+
+### Vinted
+
+Not Published
+
+### eBay
+
+Not Published
+
+If Phase 2 imported existing Depop listings, those products should already show their Depop status and external listing IDs correctly.
+
+Do not attempt to republish those products.
+
+---
+
+# STEP 13 — Prevent Duplicate Marketplace Listings
+
+Existing migrated Depop products must be treated carefully.
+
+If a product already has:
+
+* a Depop listing ID
+* a Depop listing URL
+* marketplace status = published
+
+the system must understand that the listing already exists.
+
+Do NOT create a new Depop listing for that product later without explicit instruction.
+
+This principle must be preserved in the data model and UI.
+
+---
+
+# STEP 14 — Edit Product Workflow
+
+Create a clean product editing interface.
+
+I should be able to modify:
+
+* Title
+* Description
+* Images
+* Price
+* Category
+* Tags
+* Variants
+* Search metadata
+* Product status
+* Desired sales channels
+
+During Phase 3, editing a product should update Supabase.
+
+It should NOT automatically update Depop, Vinted, or eBay yet.
+
+Marketplace synchronization will be implemented later.
+
+---
+
+# STEP 15 — Duplicate Product
+
+Add a **Duplicate Product** function if it fits naturally into the existing architecture.
+
+This could save significant time when creating similar products.
+
+For example:
+
+Product A:
+
+`Funny BJJ Black Belt Shirt`
+
+Duplicate →
+
+Product B:
+
+`Funny BJJ Purple Belt Shirt`
+
+The duplicate should receive a new internal product ID.
+
+It must NOT inherit external marketplace listing IDs.
+
+Never duplicate:
+
+* Depop listing ID
+* Vinted listing ID
+* eBay listing ID
+* marketplace URLs
+
+Marketplace identity must remain unique.
+
+---
+
+# STEP 16 — Bulk Actions
+
+Because I may manage hundreds or eventually thousands of products, design the dashboard with future bulk operations in mind.
+
+Useful actions may eventually include:
+
+* Select multiple products
+* Change status
+* Add/remove tags
+* Select marketplace
+* Remove marketplace selection
+* Archive products
+
+Do not overbuild this feature if it significantly increases Phase 3 complexity.
+
+The priority is a clean architecture that allows bulk actions later.
+
+---
+
+# STEP 17 — Product Completeness Validation
+
+Before a product can move from Draft to Ready, validate important fields.
+
+For example:
+
+* Title exists
+* Description exists
+* At least one image exists
+* Price exists
+* Category exists
+* Required variant information exists
+
+If information is missing, clearly show what needs attention.
+
+This will become important later because marketplace publishing agents should not receive incomplete products.
+
+---
+
+# STEP 18 — Marketplace Readiness
+
+Add a conceptual readiness state for each marketplace.
+
+Different marketplaces may require different information.
+
+For example:
+
+Depop may require one set of fields.
+
+Vinted may require another.
+
+eBay may require additional structured information.
+
+The system should eventually be able to say:
+
+`Depop → Ready`
+
+`Vinted → Missing category`
+
+`eBay → Missing shipping profile`
+
+Do NOT implement every marketplace validation rule yet.
+
+Just design the UI/data architecture so this capability can be added cleanly.
+
+---
+
+# STEP 19 — Publishing Queue Placeholder
+
+Create a simple section or architectural placeholder for:
+
+**Publishing Queue**
+
+Eventually this will show tasks such as:
+
+`Product 123 → Publish to Vinted`
+
+`Product 456 → Publish to Depop`
+
+`Product 789 → Update Depop`
+
+During Phase 3, this does NOT need to execute marketplace automation.
+
+It can simply prepare the interface and data architecture for Phase 4.
+
+---
+
+# STEP 20 — Error and Activity Visibility
+
+Prepare the admin interface for future operational visibility.
+
+Eventually I need to know things such as:
+
+* Publication succeeded
+* Publication failed
+* Marketplace authentication required
+* Missing product information
+* Marketplace rejected listing
+* Image upload failed
+* Synchronization failed
+
+Do not implement the complete logging system unless it already exists from Phase 2.
+
+Just make sure the admin architecture has a natural place for this information.
+
+---
+
+# STEP 21 — Speed Is Important
+
+The admin interface should optimize for fast product creation.
+
+I do not want to spend several minutes manually entering every product.
+
+Design the workflow to minimize clicks and repetitive work.
+
+Where appropriate:
+
+* Remember sensible defaults
+* Reuse previous values
+* Make tags easy to add
+* Make image upload fast
+* Make variants easy to duplicate
+* Avoid unnecessary confirmation dialogs
+
+However, do not sacrifice data integrity for speed.
+
+---
+
+# STEP 22 — Prepare for AI-Assisted Product Creation
+
+A future phase may introduce AI assistance.
+
+For example:
+
+I upload an image/design.
+
+AI analyzes it.
+
+AI suggests:
+
+* Title
+* Description
+* Tags
+* Keywords
+* Category
+* Marketplace-specific titles
+* Marketplace-specific descriptions
+
+Then I review and approve the information.
+
+Do NOT build this AI functionality during Phase 3 unless it is already trivial within the current project.
+
+Simply make sure the product creation architecture can support it later.
+
+---
+
+# STEP 23 — Mobile Usability
+
+The admin interface should be reasonably usable on mobile devices.
+
+I may need to:
+
+* Check product status
+* Edit a price
+* Change marketplace selection
+* Upload an image
+* Review a product
+
+from my phone.
+
+Do not build a separate mobile application.
+
+Use responsive design within the existing website.
+
+---
+
+# STEP 24 — Safety Around Existing Data
+
+This project already contains data from the website and the Phase 1/Phase 2 Depop migration.
+
+Do not:
+
+* Delete existing products
+* Delete existing Depop IDs
+* Overwrite marketplace metadata
+* Replace existing images without confirmation
+* Recreate existing Depop listings
+* Reset the database
+
+Any destructive database operation must be clearly explained and require my approval.
+
+---
+
+# STEP 25 — Test the Complete Product Workflow
+
+Before considering Phase 3 complete, test this workflow:
+
+### Test A — Existing Migrated Product
+
+Open a product originally imported from Depop.
+
+Confirm:
+
+* Product data displays correctly
+* Images display correctly
+* Depop status shows as published
+* Depop external ID exists
+* Depop URL exists
+* Product can be edited without losing marketplace metadata
+
+### Test B — New Product
+
+Create a completely new product from the admin panel.
+
+Add:
+
+* Title
+* Description
+* Images
+* Price
+* Category
+* Tags
+* Variants
+
+Select:
+
+Website → YES
+
+Depop → YES
+
+Vinted → YES
+
+eBay → NO
+
+Save the product.
+
+Confirm that:
+
+* Product exists correctly in Supabase
+* Images are stored correctly
+* Sales channel intent is stored
+* No Depop listing was created
+* No Vinted listing was created
+* No eBay listing was created
+
+This proves the central creation workflow works before marketplace automation is introduced.
+
+---
+
+# STEP 26 — Final Phase 3 Architecture
+
+At the end of Phase 3, the workflow should be:
+
+## Existing Products
+
+Depop Migration
+↓
+Supabase
+↓
+Admin Panel
+
+## New Products
+
+Admin Panel
+↓
+Supabase
+↓
+Website
+
+And Supabase should contain the information required for future distribution:
+
+Supabase
+↓
+Website
+↓
+Depop
+↓
+Vinted
+↓
+eBay
+↓
+Future Marketplaces
+
+The marketplace arrows beyond the website are architectural preparation only.
+
+Actual automated publishing comes later.
+
+---
+
+# IMPORTANT — DO NOT IMPLEMENT PHASE 4 YET
+
+Do NOT build browser automation for:
+
+* Depop
+* Vinted
+* eBay
+
+Do NOT automatically submit marketplace listings.
+
+Do NOT automatically modify existing marketplace listings.
+
+Do NOT build complicated synchronization logic yet.
+
+Phase 3 is about creating the **control center**.
+
+---
+
+# Execution Strategy
+
+Work in this order:
+
+1. Inspect the current application after Phase 2.
+2. Inspect the final Supabase schema.
+3. Identify existing components that can be reused.
+4. Design the admin panel architecture.
+5. Design the product creation workflow.
+6. Design the product editing workflow.
+7. Design marketplace selection/status UI.
+8. Explain the proposed implementation.
+9. Identify any required database changes.
+10. Identify risks or breaking changes.
+11. **STOP and show me the plan before implementing major changes.**
+12. After my approval, implement the admin area.
+13. Test existing migrated products.
+14. Test creation of a new product.
+15. Verify Supabase data.
+16. Verify the existing website still works.
+17. Document the implementation.
+
+---
+
+# Definition of Done
+
+Phase 3 is complete when:
+
+* I have a private admin panel.
+* I can see my existing products.
+* I can search and filter products.
+* I can create a new product.
+* I can upload and manage product images.
+* I can edit existing products.
+* I can manage tags/categories/variants.
+* I can select desired sales channels.
+* I can distinguish desired channels from actual publication status.
+* Existing Depop listings remain correctly linked.
+* New products are stored in Supabase.
+* The existing website continues working.
+* No marketplace automation occurs yet.
+
+The fundamental change after Phase 3 should be:
+
+**I no longer need to create a product on Depop first.**
+
+From this point forward:
+
+**I create the product once in my own system, Supabase stores the canonical product, and future phases will distribute that product to whichever marketplaces I select.**

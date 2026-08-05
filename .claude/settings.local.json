@@ -73,7 +73,16 @@
       "Read(//c/Users/vital/Downloads/**)",
       "Read(//c/Users/vital/AppData/**)",
       "Bash(grep -iv \"claude\\\\\\\\\\\\\\\\projects\")",
-      "Read(//c/Users/vital/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/local-agent-mode-sessions/5afefd8d-636b-4800-b6b0-6b75c26566bd/29a18d97-dde6-4250-bd8e-dd6a8a4aaa8a/local_7bc08d9e-c173-488c-ac10-9d17553ebc20/uploads/**)"
+      "Read(//c/Users/vital/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/local-agent-mode-sessions/5afefd8d-636b-4800-b6b0-6b75c26566bd/29a18d97-dde6-4250-bd8e-dd6a8a4aaa8a/local_7bc08d9e-c173-488c-ac10-9d17553ebc20/uploads/**)",
+      "Read(//c/Users/vital/Documents/extracaoBD/**)",
+      "Bash(python3 -c ' *)",
+      "Bash(awk -F',' 'NR>1{print $7}' products.csv)",
+      "Bash(awk -F',' 'NR>1{print $8}' products.csv)",
+      "Bash(npx supabase *)",
+      "Bash(cd \"C:\\\\Users\\\\vital\\\\Documents\\\\extracaoBD\" && ls images/ && echo \"---sample tee entry---\" && grep -n \"paacakeneon-8-ball-graphic-streetwear-t-shirt-29a3\" -A 60 products.json | head -90)",
+      "Bash(cd \"C:\\\\Users\\\\vital\\\\Documents\\\\extracaoBD\" && grep -n \"paacakeneon-8-ball-graphic-streetwear-t-shirt-29a3\" -A 75 products.json | tail -20)",
+      "Bash(cd \"C:\\\\Users\\\\vital\\\\Documents\\\\extracaoBD\" && sed -n '460,475p' products.json)",
+      "Bash(node -e ' *)"
     ]
   }
 }

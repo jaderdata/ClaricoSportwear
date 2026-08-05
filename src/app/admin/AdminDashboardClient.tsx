@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { QuoteRequest, Product, PartnerAcademy, DEFAULT_PARTNER_ACADEMIES } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase-browser';
 import Link from 'next/link';
+import StoreProductsTab from './StoreProductsTab';
 
 const MOCK_QUOTES: QuoteRequest[] = [
   {
@@ -92,7 +93,7 @@ const FALLBACK_PRODUCTS: Product[] = [
 export default function AdminDashboardClient() {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<'quotes' | 'products' | 'academies'>('quotes');
+  const [activeTab, setActiveTab] = useState<'quotes' | 'products' | 'store' | 'academies'>('quotes');
 
   const [quotes, setQuotes] = useState<QuoteRequest[]>(MOCK_QUOTES);
   const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
@@ -304,6 +305,11 @@ export default function AdminDashboardClient() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/admin/login');
+  };
+
+  const handleSwitchToPublic = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
   };
 
   const handleUpdateStatus = async (quoteId: string, newStatus: QuoteRequest['status']) => {
@@ -546,9 +552,22 @@ export default function AdminDashboardClient() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             
-            <div className="flex items-center gap-4">
-              <Link href="/" className="touch-target px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors font-bold text-xs">
-                ← Back
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSwitchToPublic}
+                title="Exit admin session and return to user site (requires password to re-enter admin)"
+                className="touch-target px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>← Exit to User Site</span>
+              </button>
+              <Link
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open public website in a new tab"
+                className="touch-target px-3.5 py-2 rounded-xl bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-slate-200 transition-colors font-bold text-xs hidden sm:flex items-center gap-1.5"
+              >
+                <span>Preview Site ↗</span>
               </Link>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-linear-to-br from-red-600 to-rose-700 flex items-center justify-center shadow-lg font-black text-white text-xl font-mono">
@@ -585,6 +604,14 @@ export default function AdminDashboardClient() {
                 Catalog & Products
               </button>
               <button
+                onClick={() => setActiveTab('store')}
+                className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer ${
+                  activeTab === 'store' ? 'bg-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Store Products
+              </button>
+              <button
                 onClick={() => setActiveTab('academies')}
                 className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer ${
                   activeTab === 'academies' ? 'bg-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
@@ -595,6 +622,12 @@ export default function AdminDashboardClient() {
             </div>
 
             <div className="flex items-center gap-3">
+              <Link
+                href="/admin/import"
+                className="touch-target px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition-colors"
+              >
+                <span className="hidden sm:inline">Import Depop</span>
+              </Link>
               <button
                 onClick={() => { fetchQuotes(); fetchProducts(); fetchAcademies(); }}
                 className="touch-target px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition-colors cursor-pointer"
@@ -629,6 +662,14 @@ export default function AdminDashboardClient() {
             }`}
           >
             Catalog ({products.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('store')}
+            className={`flex-1 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-colors ${
+              activeTab === 'store' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'
+            }`}
+          >
+            Store
           </button>
           <button
             onClick={() => setActiveTab('academies')}
@@ -862,6 +903,9 @@ export default function AdminDashboardClient() {
             </div>
           </div>
         )}
+
+        {/* TAB 3: STORE PRODUCTS (D2C catalog, feeds /shop) */}
+        {activeTab === 'store' && <StoreProductsTab />}
 
         {/* ── ACADEMIAS PARCEIRAS TAB ── */}
         {activeTab === 'academies' && (

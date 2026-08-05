@@ -38,13 +38,13 @@ describe('updateSession', () => {
     expect(response.headers.get('location')).toBeNull();
   });
 
-  it('redirects to /admin when there is a user and the path is the login route', async () => {
+  it('allows access to /admin/login even when a user session exists so password re-entry is required', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
 
     const response = await updateSession(buildRequest('/admin/login'));
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/admin');
+    expect(response.status).not.toBe(307);
+    expect(response.headers.get('location')).toBeNull();
   });
 
   it('passes through when there is a user and the path is not the login route', async () => {

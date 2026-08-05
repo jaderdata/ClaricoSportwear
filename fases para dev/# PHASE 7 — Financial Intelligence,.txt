@@ -1,0 +1,1739 @@
+# PHASE 7 — Financial Intelligence, Profitability & Analytics Dashboard
+
+## Project Context
+
+Phases 1 through 6 established the operational foundation of the commerce platform.
+
+### Phase 1 — Catalog Migration
+
+Existing marketplace listings were extracted and migrated.
+
+### Phase 2 — Central Product Database
+
+Supabase became the central source of truth for product information.
+
+### Phase 3 — Product Management
+
+A private admin panel was created to manage products, images, variants, pricing, tags, and sales-channel selection.
+
+### Phase 4 — Marketplace Publishing
+
+Products can be published to selected marketplaces.
+
+### Phase 5 — Synchronization & Reconciliation
+
+Marketplace listings can be monitored, updated, reconciled, and verified.
+
+### Phase 6 — Orders, Inventory & Fulfillment
+
+Orders from multiple channels can be normalized into Supabase, connected to products, tracked through production and fulfillment, and reflected in inventory.
+
+Phase 7 adds the financial and analytical layer.
+
+The system should now answer not only:
+
+> What sold?
+
+but also:
+
+> Was that sale actually profitable?
+
+and:
+
+> Which products, channels, designs, customers, and strategies are producing the best business results?
+
+---
+
+# MAIN OBJECTIVE
+
+Build a centralized **Financial Intelligence & Analytics System** inside the existing admin platform.
+
+The system should transform raw operational data into actionable business information.
+
+It should eventually provide clear answers to questions such as:
+
+* How much revenue did I generate?
+* How much profit did I generate?
+* What is my gross margin?
+* What is my net margin?
+* Which marketplace is most profitable?
+* Which marketplace generates the most revenue?
+* Which product sells the most?
+* Which product is the most profitable?
+* Which designs are growing?
+* Which products are underperforming?
+* How much do marketplace fees cost me?
+* How much do shipping costs reduce margin?
+* How much does each shirt actually cost me?
+* What is the average order value?
+* How many units am I selling per day?
+* Which channels deserve more attention?
+* Which products should I stop producing?
+* Which products should I scale?
+
+---
+
+# CORE PRINCIPLE
+
+Revenue is NOT profit.
+
+The system must clearly separate:
+
+* Gross sales
+* Discounts
+* Taxes
+* Shipping charged
+* Marketplace fees
+* Payment processing fees
+* Production costs
+* Product costs
+* Packaging costs
+* Shipping costs
+* Refunds
+* Returns
+* Other expenses
+* Net revenue
+* Gross profit
+* Contribution margin
+* Net profit estimate
+
+Do not show simple revenue as if it represents business success.
+
+---
+
+# STEP 1 — Inspect Existing Financial Data
+
+Before implementation, inspect all financial information already available from previous phases.
+
+Review:
+
+* Orders
+* Order items
+* Marketplace fees
+* Product prices
+* Shipping charged
+* Shipping costs
+* Refunds
+* Cancellations
+* Inventory costs
+* Production data
+* Product variants
+* Marketplace information
+* Payment data
+* Manual orders
+* Bulk/B2B orders
+
+Identify what is already captured and what is missing.
+
+Do not duplicate financial fields unnecessarily.
+
+---
+
+# STEP 2 — Define Financial Terminology
+
+Before building dashboards, define the exact meaning of each metric.
+
+For example:
+
+## Gross Merchandise Value / Gross Sales
+
+Total merchandise value before deductions.
+
+## Discounts
+
+Discounts applied to sales.
+
+## Refunds
+
+Amounts returned to customers.
+
+## Net Sales
+
+Gross sales minus discounts and refunds.
+
+## Marketplace Fees
+
+Fees charged by Depop, Vinted, eBay, or other channels.
+
+## Payment Processing Fees
+
+Payment-provider transaction fees.
+
+## Cost of Goods Sold
+
+Direct product cost associated with sold items.
+
+## Gross Profit
+
+Net sales minus direct product cost.
+
+## Contribution Profit
+
+Gross profit minus marketplace fees, payment fees, shipping subsidy, packaging, and other variable selling costs.
+
+## Contribution Margin
+
+Contribution profit divided by net sales.
+
+These definitions must be documented and used consistently.
+
+---
+
+# STEP 3 — Cost Architecture
+
+Create or evolve a structured cost model.
+
+A product may have costs such as:
+
+* Blank garment
+* DTF transfer
+* Printing/pressing
+* Packaging
+* Label
+* Shipping material
+* Labor estimate
+* Marketplace-specific selling cost
+
+Do not store everything inside a single generic `cost` field if more detail is operationally useful.
+
+Support both:
+
+* Total cost
+* Component-level cost breakdown
+
+---
+
+# STEP 4 — Product Cost History
+
+Costs change over time.
+
+Do not assume the current cost of a shirt was the same cost when an old order was fulfilled.
+
+Use historical cost snapshots or effective-date cost records.
+
+Example:
+
+January blank shirt cost:
+
+`$3.50`
+
+August blank shirt cost:
+
+`$4.20`
+
+An order from January should retain the January economics.
+
+Historical profitability must not change every time current supplier costs change.
+
+---
+
+# STEP 5 — Order-Level Financial Snapshot
+
+Every completed order should be able to preserve its economic reality.
+
+Conceptually store:
+
+* Merchandise revenue
+* Discounts
+* Shipping revenue
+* Taxes
+* Marketplace fees
+* Payment fees
+* Production cost
+* Packaging cost
+* Shipping cost
+* Refunds
+* Net proceeds
+* Estimated gross profit
+* Estimated contribution profit
+
+Do not calculate historical orders solely from today's product settings.
+
+---
+
+# STEP 6 — Marketplace Fees
+
+Create a normalized fee structure.
+
+Marketplace fees may include:
+
+* Listing fee
+* Transaction fee
+* Commission
+* Payment fee
+* Promotion fee
+* Final value fee
+* Other marketplace deductions
+
+Preserve raw marketplace fee data when available.
+
+Normalize it for reporting.
+
+Do not silently estimate fees when real fee data exists.
+
+---
+
+# STEP 7 — Fee Estimation
+
+Sometimes exact marketplace fees may not be available immediately.
+
+If estimated values are needed, clearly distinguish:
+
+`estimated`
+
+from:
+
+`confirmed`
+
+Example:
+
+`marketplace_fee_status = estimated`
+
+Later, once the actual transaction data becomes available, replace or reconcile the estimate.
+
+Never present estimates as confirmed facts.
+
+---
+
+# STEP 8 — Shipping Economics
+
+Separate:
+
+**Shipping charged to customer**
+
+from:
+
+**Actual shipping cost**
+
+These are not the same thing.
+
+Example:
+
+Customer shipping charge:
+
+`$6.00`
+
+Actual label cost:
+
+`$5.10`
+
+Shipping contribution:
+
+`+$0.90`
+
+Another order:
+
+Customer shipping:
+
+`$0`
+
+Actual shipping cost:
+
+`$5.10`
+
+Shipping contribution:
+
+`-$5.10`
+
+This difference materially affects profitability.
+
+---
+
+# STEP 9 — Product-Level Profitability
+
+Calculate profitability by product.
+
+Useful metrics:
+
+* Units sold
+* Gross revenue
+* Net revenue
+* Average selling price
+* Product cost
+* Gross profit
+* Contribution profit
+* Gross margin %
+* Contribution margin %
+* Refund rate
+* Return rate
+
+This should make it easy to compare products.
+
+---
+
+# STEP 10 — Design-Level Analytics
+
+If multiple products use the same artwork/design, support analytics at the design level.
+
+Example:
+
+Design:
+
+`Funny Black Belt`
+
+Variants:
+
+* Black shirt
+* White shirt
+* Women's shirt
+* Hoodie
+
+The system should eventually show total performance for the design as well as each product variant.
+
+This can reveal which creative concepts are actually working.
+
+---
+
+# STEP 11 — Marketplace-Level Profitability
+
+Compare channels independently.
+
+For each marketplace, calculate:
+
+* Orders
+* Units sold
+* Revenue
+* Average order value
+* Marketplace fees
+* Payment fees
+* Refunds
+* Shipping costs
+* Product costs
+* Gross profit
+* Contribution profit
+* Margin
+
+This is important because:
+
+Highest revenue channel ≠ highest profit channel.
+
+---
+
+# STEP 12 — Website vs Marketplace Economics
+
+Make website performance directly comparable with external marketplaces.
+
+For example:
+
+Website:
+
+Lower marketplace fees
+
+but possibly:
+
+Higher advertising cost
+
+Depop:
+
+Higher marketplace fees
+
+but:
+
+Organic discovery
+
+These are different economic models.
+
+The dashboard should support fair comparison.
+
+---
+
+# STEP 13 — Customer Acquisition Cost Preparation
+
+Prepare the architecture for customer acquisition costs.
+
+Future sources may include:
+
+* Meta Ads
+* Google Ads
+* TikTok
+* Influencer spend
+* Event sponsorship
+* Promotional campaigns
+
+Do not necessarily build advertising integrations now.
+
+But allow future attribution of marketing spend to:
+
+* Channel
+* Campaign
+* Date range
+* Product
+* Order
+
+---
+
+# STEP 14 — Manual Expenses
+
+Create a way to record business expenses not generated automatically.
+
+Examples:
+
+* Event fee
+* Gas
+* Booth fee
+* Advertising
+* Equipment
+* Supplies
+* Software subscription
+* Contractor expense
+
+Classify expenses.
+
+Do not mix operational business expenses with marketplace transaction fees.
+
+---
+
+# STEP 15 — Fixed vs Variable Costs
+
+Differentiate:
+
+### Variable Costs
+
+Scale with sales.
+
+Examples:
+
+* Shirt blank
+* DTF transfer
+* Packaging
+* Shipping
+* Marketplace fee
+
+### Fixed Costs
+
+Exist regardless of sales.
+
+Examples:
+
+* Software subscription
+* Equipment lease
+* Website hosting
+* Storage
+* General overhead
+
+This enables both contribution analysis and broader profitability analysis.
+
+---
+
+# STEP 16 — Margin Levels
+
+Support multiple levels of profitability.
+
+For example:
+
+## Gross Margin
+
+Revenue minus product cost.
+
+## Contribution Margin
+
+Gross profit minus variable selling/fulfillment costs.
+
+## Operating Profit Estimate
+
+Contribution profit minus allocated operating expenses.
+
+Do not hide the distinction.
+
+Different decisions require different margin levels.
+
+---
+
+# STEP 17 — Revenue Dashboard
+
+Create a top-level revenue dashboard.
+
+Useful metrics:
+
+* Today
+* Yesterday
+* Last 7 days
+* Last 30 days
+* Month to date
+* Previous month
+* Year to date
+
+Display:
+
+* Revenue
+* Orders
+* Units
+* Average order value
+* Refunds
+* Net sales
+
+---
+
+# STEP 18 — Profit Dashboard
+
+Create a profitability dashboard.
+
+Display:
+
+* Gross profit
+* Contribution profit
+* Gross margin
+* Contribution margin
+* Product cost
+* Marketplace fees
+* Shipping costs
+* Payment fees
+* Refund impact
+
+This dashboard should be separate from simple sales reporting.
+
+---
+
+# STEP 19 — Marketplace Comparison Dashboard
+
+Create a comparison view such as:
+
+`Website`
+
+`Depop`
+
+`Vinted`
+
+`eBay`
+
+For each, show:
+
+* Revenue
+* Orders
+* Units
+* Fees
+* Profit
+* Margin
+* Average order value
+* Refund rate
+
+Allow date-range filtering.
+
+---
+
+# STEP 20 — Product Ranking
+
+Create rankings.
+
+Examples:
+
+### Best Sellers by Units
+
+### Best Sellers by Revenue
+
+### Most Profitable Products
+
+### Highest Margin Products
+
+### Lowest Margin Products
+
+### Highest Refund Rate
+
+### Fastest Growing Products
+
+Do not assume sales volume alone determines product quality.
+
+---
+
+# STEP 21 — Product Velocity
+
+Measure sales velocity.
+
+Examples:
+
+`units / day`
+
+`units / week`
+
+`units / 30 days`
+
+Useful for understanding whether demand is accelerating or slowing down.
+
+---
+
+# STEP 22 — Trend Analysis
+
+Compare periods.
+
+Examples:
+
+This week vs previous week
+
+This month vs previous month
+
+Last 30 days vs previous 30 days
+
+Show changes such as:
+
+Revenue:
+
+`+18%`
+
+Orders:
+
+`+12%`
+
+Margin:
+
+`-3%`
+
+This helps distinguish growth from profitable growth.
+
+---
+
+# STEP 23 — New Product Analysis
+
+Track product performance from launch date.
+
+Examples:
+
+First 7 days
+
+First 30 days
+
+First 90 days
+
+This helps compare newly launched designs fairly instead of comparing them directly with older products.
+
+---
+
+# STEP 24 — Cohort by Product Launch
+
+Prepare for product-launch cohorts.
+
+Example:
+
+Products launched in July
+
+vs
+
+Products launched in August
+
+Measure:
+
+* sales
+* revenue
+* margin
+* time to first sale
+
+This can help determine whether the catalog strategy is improving.
+
+---
+
+# STEP 25 — Time to First Sale
+
+Track:
+
+Product created
+
+↓
+
+Product published
+
+↓
+
+First sale
+
+Calculate:
+
+`time_to_first_sale`
+
+Products that never sell should also be identifiable.
+
+This is valuable when managing a large catalog.
+
+---
+
+# STEP 26 — Zero-Sale Products
+
+Create a report for products with:
+
+* 0 sales in 30 days
+* 0 sales in 60 days
+* 0 sales in 90 days
+
+Do not automatically delete them.
+
+Use the report to identify:
+
+* weak products
+* poor listings
+* products needing better SEO
+* products needing different pricing
+* products that should potentially be archived
+
+---
+
+# STEP 27 — Marketplace Conversion Preparation
+
+If reliable view/impression data becomes available from marketplaces or the website, prepare for metrics such as:
+
+* Impressions
+* Views
+* Clicks
+* Favorites
+* Add to cart
+* Purchases
+
+Then calculate conversion metrics.
+
+Do not invent conversion data if marketplaces do not expose it.
+
+---
+
+# STEP 28 — Website Funnel Analytics
+
+For the website, if analytics data is available, support:
+
+Search
+
+↓
+
+Product view
+
+↓
+
+Add to cart
+
+↓
+
+Checkout
+
+↓
+
+Purchase
+
+Useful metrics:
+
+* Search-to-view rate
+* View-to-cart rate
+* Cart-to-checkout rate
+* Checkout-to-purchase rate
+
+This can be a later extension if current website analytics are not yet implemented.
+
+---
+
+# STEP 29 — Search Analytics
+
+Because search is important to the website architecture, prepare a search analytics dashboard.
+
+Track:
+
+* Search query
+* Number of results
+* Products clicked
+* Conversion
+* No-result searches
+
+No-result searches can be especially valuable.
+
+They may reveal products customers want but the catalog does not yet contain.
+
+---
+
+# STEP 30 — Marketplace Search Intelligence
+
+Do not automatically scrape marketplace search data unless technically and contractually appropriate.
+
+If marketplace search/performance data is officially available, store it separately from canonical product data.
+
+This can later support SEO/listing optimization.
+
+---
+
+# STEP 31 — Discount Analysis
+
+Track discount usage.
+
+Metrics:
+
+* Orders with discounts
+* Discount amount
+* Discount percentage
+* Revenue after discount
+* Profit after discount
+
+This helps answer whether promotions are actually profitable.
+
+---
+
+# STEP 32 — Refund & Return Analytics
+
+Track:
+
+* Refund rate
+* Return rate
+* Refund value
+* Return reasons
+* Product-related patterns
+* Marketplace-related patterns
+
+Example:
+
+One design may sell extremely well but also have a high return rate.
+
+That changes the economics.
+
+---
+
+# STEP 33 — Size Analytics
+
+For apparel, analyze sales by size.
+
+Examples:
+
+S
+
+M
+
+L
+
+XL
+
+2XL
+
+3XL
+
+This helps purchasing and inventory planning.
+
+---
+
+# STEP 34 — Color Analytics
+
+Analyze performance by garment color.
+
+Examples:
+
+Black
+
+White
+
+Navy
+
+Gray
+
+This helps decide which blanks deserve more inventory.
+
+---
+
+# STEP 35 — Variant Analytics
+
+Analyze:
+
+Product
+
+↓
+
+Color
+
+↓
+
+Size
+
+↓
+
+Units sold
+
+↓
+
+Margin
+
+This becomes increasingly useful once physical inventory grows.
+
+---
+
+# STEP 36 — Production Analytics
+
+Use Phase 6 production data.
+
+Track:
+
+* Units produced
+* Production backlog
+* Average production time
+* Orders waiting
+* Production errors
+* Rework
+* Production volume by day
+
+This is operational analytics, not only financial analytics.
+
+---
+
+# STEP 37 — Fulfillment Analytics
+
+Track:
+
+* Average time to ship
+* Orders shipped late
+* Delivery time
+* Shipping cost per order
+* Carrier performance
+* Shipping cost by marketplace
+
+This can identify operational bottlenecks.
+
+---
+
+# STEP 38 — B2B / Bulk Order Analytics
+
+Separate bulk and business orders from normal consumer orders when useful.
+
+Examples:
+
+* Gym orders
+* Instructor orders
+* Federation orders
+* Event orders
+* Wholesale orders
+
+Metrics:
+
+* Revenue
+* Units
+* Average order size
+* Margin
+* Repeat business
+
+Do not mix one 100-shirt gym order with one normal consumer order without the ability to distinguish them.
+
+---
+
+# STEP 39 — Customer Analytics Preparation
+
+Where privacy rules allow, support aggregate customer metrics.
+
+Examples:
+
+* Repeat customer rate
+* Orders per customer
+* Average customer value
+* First-time vs repeat customers
+
+Do not over-collect customer personal information.
+
+Use only the data necessary for legitimate business operations and analytics.
+
+---
+
+# STEP 40 — Financial Data Quality
+
+Financial dashboards are only useful if data quality is visible.
+
+Track data completeness.
+
+Example:
+
+Orders:
+
+`250`
+
+Orders with confirmed marketplace fees:
+
+`225`
+
+Orders with estimated fees:
+
+`20`
+
+Orders missing fee data:
+
+`5`
+
+Do not hide missing data.
+
+---
+
+# STEP 41 — Confirmed vs Estimated Profit
+
+Support a confidence state.
+
+Example:
+
+### Confirmed Profit
+
+All relevant actual costs and fees are known.
+
+### Estimated Profit
+
+One or more costs are estimated.
+
+This makes dashboards intellectually honest.
+
+---
+
+# STEP 42 — Manual Cost Corrections
+
+Allow authorized users to correct financial information.
+
+Example:
+
+Shipping cost imported incorrectly.
+
+Allow correction.
+
+Record:
+
+* Previous value
+* New value
+* Reason
+* Timestamp
+* User/system actor
+
+Never silently overwrite financial history.
+
+---
+
+# STEP 43 — Financial Audit Trail
+
+Important financial changes must be auditable.
+
+Examples:
+
+* Cost changed
+* Fee corrected
+* Refund recorded
+* Expense added
+* Expense deleted
+* Profit recalculated
+
+Maintain history.
+
+---
+
+# STEP 44 — Daily Business Summary
+
+Create a concise daily business view.
+
+Example:
+
+Today:
+
+Revenue: `$1,240`
+
+Orders: `48`
+
+Units: `55`
+
+Gross Profit: `$620`
+
+Contribution Profit: `$510`
+
+Best Marketplace: `Depop`
+
+Best Product: `Black Belt Design`
+
+Refunds: `$0`
+
+Production Pending: `12`
+
+Orders Ready to Ship: `8`
+
+This should make the business understandable in seconds.
+
+---
+
+# STEP 45 — Weekly Business Review
+
+Create a weekly view.
+
+Include:
+
+* Revenue trend
+* Profit trend
+* Orders
+* Units
+* Marketplace comparison
+* Best products
+* Worst products
+* New product performance
+* Refunds
+* Production backlog
+* Inventory risks
+
+The system should surface what changed, not simply show static totals.
+
+---
+
+# STEP 46 — Monthly Business Review
+
+Create a monthly management view.
+
+Useful sections:
+
+### Financial Performance
+
+### Channel Performance
+
+### Product Performance
+
+### Operational Performance
+
+### Inventory
+
+### Returns / Refunds
+
+### Growth Trends
+
+### Risks
+
+### Opportunities
+
+---
+
+# STEP 47 — Alerts and Business Signals
+
+Create useful alerts.
+
+Examples:
+
+`Margin below threshold`
+
+`Marketplace fees increased`
+
+`Product sales accelerating`
+
+`Product has zero sales for 60 days`
+
+`Refund rate unusually high`
+
+`Shipping costs increased`
+
+`Inventory running low`
+
+`Production backlog increasing`
+
+Avoid excessive noisy alerts.
+
+Only surface meaningful business conditions.
+
+---
+
+# STEP 48 — Profitability Thresholds
+
+Allow configurable thresholds.
+
+Example:
+
+Minimum acceptable contribution margin:
+
+`30%`
+
+If a product falls below:
+
+Display:
+
+`LOW MARGIN`
+
+This can prevent scaling products that generate sales but little profit.
+
+---
+
+# STEP 49 — Break-Even Analysis
+
+Prepare basic break-even calculations.
+
+Example:
+
+Fixed monthly operating cost:
+
+`$2,000`
+
+Average contribution profit per order:
+
+`$10`
+
+Break-even:
+
+`200 orders/month`
+
+This provides useful strategic context.
+
+---
+
+# STEP 50 — Scenario Analysis
+
+Prepare architecture for simple scenarios.
+
+Example:
+
+What happens if:
+
+Marketplace fee increases by 2%?
+
+Blank shirt cost increases by $1?
+
+Average selling price increases by $2?
+
+Shipping cost decreases by $0.50?
+
+Do not build an overly complex financial model.
+
+Start with simple scenario analysis.
+
+---
+
+# STEP 51 — Export Capability
+
+Allow authorized export of financial reports.
+
+Useful formats:
+
+* CSV
+* JSON
+* Spreadsheet-compatible data
+
+Possible reports:
+
+* Orders
+* Sales
+* Marketplace fees
+* Profitability
+* Expenses
+* Product performance
+
+Ensure exports respect privacy and permissions.
+
+---
+
+# STEP 52 — Tax Preparation Support
+
+Do NOT attempt to replace accounting software or professional tax advice.
+
+However, structure data so it can support accounting.
+
+Useful categories:
+
+* Gross sales
+* Refunds
+* Marketplace fees
+* Shipping income
+* Shipping expense
+* Product cost
+* Business expenses
+* Taxes collected where available
+
+Allow clean export for accounting workflows.
+
+---
+
+# STEP 53 — Time Zone & Reporting Rules
+
+Define reporting time zones consistently.
+
+Daily reports must not silently mix marketplace timestamps using different time zones.
+
+Use a canonical business reporting timezone.
+
+Preserve original marketplace timestamps where useful.
+
+---
+
+# STEP 54 — Currency Architecture
+
+If the business later sells internationally, preserve original transaction currency.
+
+Support:
+
+* Original currency
+* Original amount
+* Reporting currency
+* FX rate
+* Converted amount
+
+Do not implement unnecessary FX complexity if all current business is in one currency.
+
+But avoid designing the schema in a way that prevents it later.
+
+---
+
+# STEP 55 — Analytics Performance
+
+Do not execute huge raw transactional queries every time the dashboard loads.
+
+As data grows, consider:
+
+* Database views
+* Materialized views
+* Aggregation tables
+* Cached metrics
+* Incremental calculations
+
+Use these only when needed.
+
+Start simple but design for growth.
+
+---
+
+# STEP 56 — Dashboard Architecture
+
+The admin area should eventually contain:
+
+### Overview
+
+Business snapshot.
+
+### Sales
+
+Revenue and order analysis.
+
+### Profit
+
+Margins and profitability.
+
+### Marketplaces
+
+Channel comparison.
+
+### Products
+
+Product and design performance.
+
+### Inventory
+
+Stock analysis.
+
+### Production
+
+Operational performance.
+
+### Fulfillment
+
+Shipping performance.
+
+### Expenses
+
+Business expenses.
+
+### Reports
+
+Custom date-range reporting.
+
+Do not create separate disconnected analytics applications.
+
+Keep this inside the existing admin architecture.
+
+---
+
+# STEP 57 — Custom Date Ranges
+
+All important dashboards should support:
+
+* Today
+* Yesterday
+* Last 7 days
+* Last 30 days
+* Month to date
+* Previous month
+* Year to date
+* Custom range
+
+Comparisons should use equivalent prior periods where appropriate.
+
+---
+
+# STEP 58 — Drill-Down
+
+High-level metrics should be explainable.
+
+Example:
+
+Contribution Profit:
+
+`$8,450`
+
+Click/drill down:
+
+↓
+
+Marketplace breakdown
+
+↓
+
+Product breakdown
+
+↓
+
+Order breakdown
+
+A user should be able to understand where a number came from.
+
+---
+
+# STEP 59 — Avoid Misleading Metrics
+
+Do not create vanity dashboards.
+
+Examples of potentially misleading metrics:
+
+* Revenue without refunds
+* Revenue without fees
+* Gross sales without product cost
+* Sales volume without margin
+* Lifetime totals without period comparison
+
+Prioritize metrics that support actual decisions.
+
+---
+
+# STEP 60 — Testing Strategy
+
+Test using a small known dataset.
+
+Create or select orders where the expected economics can be calculated manually.
+
+Example:
+
+Sale price:
+
+`$25`
+
+Marketplace fee:
+
+`$2`
+
+Product cost:
+
+`$7`
+
+Shipping cost:
+
+`$5`
+
+Expected contribution profit:
+
+`$11`
+
+Verify system result.
+
+Then test:
+
+* Refund
+* Discount
+* Shipping subsidy
+* Marketplace fee
+* Product cost change
+* Manual expense
+
+---
+
+# STEP 61 — Reconciliation Test
+
+Choose marketplace orders with actual financial statements where available.
+
+Compare:
+
+Marketplace-reported proceeds
+
+vs
+
+System calculation
+
+Investigate differences.
+
+Do not declare the financial engine complete until these numbers reconcile within explained differences.
+
+---
+
+# STEP 62 — Small Historical Test
+
+Run analytics against a limited historical range first.
+
+Example:
+
+7 days.
+
+Verify:
+
+* Revenue
+* Orders
+* Units
+* Fees
+* Costs
+* Profit
+* Refunds
+
+Then expand to:
+
+30 days.
+
+Only after validation should the full historical dataset be used.
+
+---
+
+# STEP 63 — Definition of Done
+
+Phase 7 is complete when:
+
+* Revenue is calculated reliably.
+* Net sales are distinguished from gross sales.
+* Product costs are tracked.
+* Marketplace fees are tracked.
+* Shipping economics are tracked.
+* Refunds are represented correctly.
+* Gross profit can be calculated.
+* Contribution profit can be calculated.
+* Margins can be calculated.
+* Marketplace profitability can be compared.
+* Product profitability can be compared.
+* Design performance can be analyzed.
+* Historical economics remain historically accurate.
+* Estimated and confirmed values are distinguished.
+* Financial changes are auditable.
+* Daily, weekly, and monthly dashboards exist.
+* Important business risks can be surfaced.
+* Data can be exported for accounting/reporting.
+* The dashboard clearly separates revenue from profit.
+
+---
+
+# FINAL ARCHITECTURE AFTER PHASE 7
+
+The system now becomes:
+
+## PRODUCT SYSTEM
+
+**Admin Panel**
+
+↓
+
+**Supabase**
+
+↓
+
+**Marketplace Publishing**
+
+## SYNC SYSTEM
+
+**Supabase**
+
+↔
+
+**Marketplace State**
+
+## ORDER SYSTEM
+
+**Sales Channels**
+
+↓
+
+**Unified Orders**
+
+## OPERATIONS SYSTEM
+
+**Orders**
+
+↓
+
+**Production**
+
+↓
+
+**Inventory**
+
+↓
+
+**Fulfillment**
+
+## FINANCIAL SYSTEM
+
+**Orders + Fees + Costs + Expenses**
+
+↓
+
+**Financial Engine**
+
+↓
+
+**Revenue**
+
+↓
+
+**Gross Profit**
+
+↓
+
+**Contribution Profit**
+
+↓
+
+**Margins**
+
+## ANALYTICS SYSTEM
+
+**Products + Orders + Marketplaces + Operations + Finance**
+
+↓
+
+**Business Intelligence Dashboard**
+
+↓
+
+**Decisions**
+
+At this stage, the system should no longer only tell me what happened.
+
+It should help me understand:
+
+**what is working, what is not working, where the money is coming from, where the money is being lost, and what deserves more attention.**
+
+---
+
+# IMPORTANT EXECUTION ORDER
+
+Do NOT immediately build every dashboard.
+
+First:
+
+1. Inspect Phase 6 financial/order data.
+2. Define every financial metric precisely.
+3. Identify available fee data.
+4. Identify available cost data.
+5. Identify missing data.
+6. Design the financial schema.
+7. Design cost-history handling.
+8. Design order financial snapshots.
+9. Design confirmed vs estimated values.
+10. Design profitability formulas.
+11. Verify formulas manually.
+12. Present the financial architecture.
+13. Present example calculations.
+14. **STOP AND WAIT FOR MY APPROVAL.**
+
+After approval:
+
+15. Implement the core financial calculations.
+16. Test with a small known dataset.
+17. Reconcile results manually.
+18. Build the first Overview dashboard.
+19. Build Marketplace comparison.
+20. Build Product profitability.
+21. **STOP AND SHOW ME THE RESULTS.**
+22. After approval, expand analytics and historical reporting.
+
+---
+
+# CORE PRINCIPLE
+
+Phase 6 answers:
+
+**"What did I sell and what do I need to fulfill?"**
+
+Phase 7 answers:
+
+**"Did I actually make money, where did I make it, and what should I do more or less of?"**
+
+The objective is not to create a pretty dashboard.
+
+The objective is to create a **decision system** that helps the business allocate time, capital, inventory, and attention intelligently.
+
+The final goal is:
+
+**One source of truth.**
+
+**One operational system.**
+
+**One financial view.**
+
+**One clear picture of what is actually driving profit.**

@@ -1,0 +1,1779 @@
+# PHASE 6 — Unified Orders, Sales & Inventory Management
+
+## Project Context
+
+Phases 1 through 5 have established the core commerce infrastructure.
+
+### Phase 1 — Existing Catalog Migration
+
+Existing Depop listings were extracted and migrated into the centralized architecture.
+
+### Phase 2 — Central Product Database
+
+The existing Supabase database was evolved into the central product source of truth.
+
+### Phase 3 — Admin Product Management
+
+A private admin panel was created for managing products, images, variants, metadata, and desired sales channels.
+
+### Phase 4 — Multi-Marketplace Publishing
+
+Products can be published from Supabase to explicitly selected marketplaces.
+
+### Phase 5 — Synchronization & Reconciliation
+
+Published listings can be monitored, updated, reconciled, and compared against the canonical Supabase product state.
+
+The architecture currently handles the **outbound product flow**:
+
+**Supabase → Marketplaces**
+
+Phase 6 must implement the opposite operational flow:
+
+**Marketplaces → Orders → Supabase**
+
+The objective is to create one centralized place where I can understand what was sold, where it was sold, what needs to be fulfilled, and how the sale affects product availability.
+
+---
+
+# MAIN OBJECTIVE
+
+Build a unified **Order, Sales, Fulfillment & Inventory Management System** inside the existing application.
+
+Orders may originate from:
+
+* My website
+* Depop
+* Vinted
+* eBay
+* Future marketplaces
+
+Regardless of where the customer purchased the product, the order should eventually be represented in Supabase using a normalized internal order structure.
+
+The admin panel should become the central operational dashboard.
+
+I should eventually be able to answer:
+
+* What sold?
+* Where did it sell?
+* When did it sell?
+* How much did it sell for?
+* Which product was sold?
+* Which variant was sold?
+* Has it been paid?
+* Does it need production?
+* Does it need shipping?
+* Has it shipped?
+* What is the tracking number?
+* Was it delivered?
+* Was it cancelled?
+* Was it refunded?
+* How did this sale affect inventory?
+
+---
+
+# CORE ARCHITECTURAL PRINCIPLE
+
+Marketplace orders must NOT become the canonical product database.
+
+Supabase remains the central system.
+
+External marketplace orders are imported and normalized into internal Supabase records.
+
+Conceptually:
+
+**Website Order**
+
+or
+
+**Depop Order**
+
+or
+
+**Vinted Order**
+
+or
+
+**eBay Order**
+
+↓
+
+**Marketplace Order Adapter**
+
+↓
+
+**Normalized Internal Order**
+
+↓
+
+**Supabase**
+
+↓
+
+**Admin Order Dashboard**
+
+The rest of the internal system should not need to understand every marketplace's raw order format.
+
+---
+
+# STEP 1 — Inspect the Existing System
+
+Before implementing Phase 6, inspect the completed architecture from Phases 1–5.
+
+Understand:
+
+* Product schema
+* Product variants
+* Marketplace listings
+* External listing IDs
+* Marketplace connectors
+* Job queue
+* Synchronization engine
+* Existing website checkout architecture
+* Existing order tables, if any
+* Existing customer tables, if any
+* Existing inventory architecture
+* Existing authentication
+* Existing admin panel
+* Existing audit/logging system
+* Existing payment integration, if any
+* Existing shipping integration, if any
+
+Do not create duplicate order, customer, or inventory systems if equivalent structures already exist.
+
+Extend the current architecture whenever possible.
+
+---
+
+# STEP 2 — Create a Canonical Internal Order Model
+
+Create or evolve a normalized internal order model.
+
+Potential entities may include:
+
+`orders`
+
+`order_items`
+
+`order_events`
+
+`order_payments`
+
+`order_shipments`
+
+`order_addresses`
+
+`marketplace_orders`
+
+`inventory_movements`
+
+However, these names are conceptual.
+
+Reuse existing tables if equivalent structures already exist.
+
+An internal order should have its own canonical internal ID.
+
+Example:
+
+`order_id = UUID`
+
+The marketplace order ID must remain an external identifier.
+
+Do NOT use a Depop, Vinted, or eBay order ID as the primary internal order identity.
+
+---
+
+# STEP 3 — Separate Internal Order Identity From Marketplace Identity
+
+Example:
+
+Internal Order ID:
+
+`a8f2...`
+
+Marketplace:
+
+`depop`
+
+External Order ID:
+
+`DEPOP-123456`
+
+External Listing ID:
+
+`987654`
+
+This allows the system to normalize orders regardless of origin.
+
+Future marketplace integrations should not require redesigning the core order tables.
+
+---
+
+# STEP 4 — Marketplace Order Adapters
+
+Each marketplace connector should have an order adapter.
+
+Conceptually:
+
+`Depop Order Adapter`
+
+`Vinted Order Adapter`
+
+`eBay Order Adapter`
+
+`Website Order Adapter`
+
+Each adapter receives marketplace-specific order information and transforms it into the canonical internal order structure.
+
+The internal order system should not contain large amounts of marketplace-specific branching logic.
+
+Marketplace-specific behavior belongs in adapters/connectors.
+
+---
+
+# STEP 5 — Prefer Official Order Integrations
+
+For each marketplace, determine the officially supported method for retrieving:
+
+* Orders
+* Sale events
+* Payment status
+* Shipping status
+* Tracking information
+* Cancellation events
+* Refund events
+
+Preferred order:
+
+1. Official API
+2. Official webhooks/events
+3. Official integration
+4. Supported partner mechanism
+5. Other permitted mechanisms when appropriate
+
+Do not bypass marketplace security systems.
+
+Do not bypass CAPTCHA, MFA, anti-bot controls, or access restrictions.
+
+---
+
+# STEP 6 — Order Discovery
+
+The system needs a reliable way to discover new orders.
+
+Preferred architecture:
+
+**Marketplace Event / Webhook**
+
+↓
+
+**Order Import Job**
+
+If webhooks are unavailable:
+
+**Scheduled Order Check**
+
+↓
+
+**Detect New Orders**
+
+↓
+
+**Order Import Job**
+
+Do not aggressively poll marketplaces unnecessarily.
+
+Use reasonable marketplace-specific intervals.
+
+---
+
+# STEP 7 — Prevent Duplicate Orders
+
+Order import must be idempotent.
+
+Use a uniqueness concept such as:
+
+`marketplace + external_order_id`
+
+Before importing an order, check whether it already exists.
+
+Example:
+
+Marketplace:
+
+`depop`
+
+External Order:
+
+`123456`
+
+If already imported:
+
+DO NOT create another internal order.
+
+Instead determine whether the existing order needs updating.
+
+---
+
+# STEP 8 — Import Order Data
+
+Where available and permitted, capture relevant information such as:
+
+* External order ID
+* Marketplace
+* Order date
+* Customer information
+* Product/listing
+* Variant
+* Quantity
+* Sale price
+* Shipping amount
+* Marketplace fees
+* Taxes
+* Discounts
+* Payment status
+* Shipping status
+* Tracking number
+* Order status
+* Cancellation status
+* Refund status
+* Marketplace-specific metadata
+
+Do not invent information unavailable from the marketplace.
+
+Store unavailable values as null.
+
+---
+
+# STEP 9 — Product Matching
+
+Every imported marketplace order item should be matched to the canonical Supabase product whenever possible.
+
+Preferred matching chain:
+
+1. Marketplace listing ID
+2. Marketplace listing record
+3. Internal product ID
+4. Internal variant ID
+
+Example:
+
+Vinted Order
+
+↓
+
+Vinted Listing ID `ABC123`
+
+↓
+
+`marketplace_listings`
+
+↓
+
+Internal Product `product-789`
+
+↓
+
+Variant `Large / Black`
+
+This relationship is critical.
+
+---
+
+# STEP 10 — Unmatched Orders
+
+Do not discard an order because product matching fails.
+
+If an external order cannot be matched:
+
+Import it anyway.
+
+Set:
+
+`MATCH_REQUIRED`
+
+Display it prominently in the admin panel.
+
+Allow me to manually connect the order item to an internal product.
+
+Once matched, preserve that relationship for future operations.
+
+---
+
+# STEP 11 — Order Status Normalization
+
+Different marketplaces may use different order statuses.
+
+Normalize them into internal statuses.
+
+Conceptually:
+
+`new`
+
+`paid`
+
+`processing`
+
+`production_required`
+
+`ready_to_ship`
+
+`shipped`
+
+`delivered`
+
+`cancelled`
+
+`refunded`
+
+`partially_refunded`
+
+`disputed`
+
+`needs_attention`
+
+The exact states should follow actual operational requirements.
+
+Marketplace-specific statuses should still be preserved separately.
+
+---
+
+# STEP 12 — Order Lifecycle
+
+A typical order may move through:
+
+**New**
+
+↓
+
+**Paid**
+
+↓
+
+**Production Required**
+
+↓
+
+**Ready to Ship**
+
+↓
+
+**Shipped**
+
+↓
+
+**Delivered**
+
+Some orders may instead move to:
+
+**Cancelled**
+
+or:
+
+**Refunded**
+
+Do not assume every order follows the same lifecycle.
+
+---
+
+# STEP 13 — Made-to-Order Products
+
+The system must support made-to-order products.
+
+This is especially important for printed apparel.
+
+A marketplace sale may create a production requirement rather than simply decrementing finished-goods inventory.
+
+Support an inventory/fulfillment policy such as:
+
+`MADE_TO_ORDER`
+
+For a made-to-order product:
+
+Sale occurs
+
+↓
+
+Order imported
+
+↓
+
+Production task required
+
+↓
+
+Product produced
+
+↓
+
+Ready to ship
+
+↓
+
+Shipment created
+
+This must be different from a unique physical item.
+
+---
+
+# STEP 14 — Inventory Policies
+
+Support multiple inventory strategies.
+
+Conceptually:
+
+### UNLIMITED
+
+No inventory tracking.
+
+### MADE_TO_ORDER
+
+Product is produced after sale.
+
+### TRACK_QUANTITY
+
+Physical stock quantity is tracked.
+
+### UNIQUE_ITEM
+
+Only one sellable unit exists.
+
+These policies should affect what happens when a sale occurs.
+
+---
+
+# STEP 15 — Inventory Movements
+
+Do not simply overwrite inventory numbers without history.
+
+Create an inventory movement architecture.
+
+Examples:
+
+`+10 RESTOCK`
+
+`-1 SALE`
+
+`+1 RETURN`
+
+`-1 DAMAGE`
+
+`-1 MANUAL_ADJUSTMENT`
+
+Every inventory change should be traceable.
+
+Conceptually:
+
+Current inventory = sum of valid inventory movements.
+
+This creates a reliable audit trail.
+
+---
+
+# STEP 16 — Multi-Channel Inventory
+
+If a physical inventory quantity is shared across marketplaces, all marketplaces must eventually reflect the same available quantity.
+
+Example:
+
+Internal inventory:
+
+`1`
+
+Product exists on:
+
+Website
+
+Depop
+
+Vinted
+
+eBay
+
+Sale occurs on Vinted.
+
+Internal available inventory becomes:
+
+`0`
+
+The system should then determine the appropriate action for:
+
+Website
+
+Depop
+
+eBay
+
+to prevent another sale.
+
+This is critical for unique or limited-stock items.
+
+---
+
+# STEP 17 — Overselling Protection
+
+Design inventory operations to avoid race conditions.
+
+Example:
+
+Inventory = `1`
+
+Depop order arrives.
+
+At nearly the same time:
+
+Website order arrives.
+
+The database must not independently allow both transactions to consume the same final unit.
+
+Use database transactions, locking, atomic updates, or equivalent safe mechanisms.
+
+Overselling protection should happen at the database level where possible.
+
+---
+
+# STEP 18 — Inventory Reservations
+
+Prepare for inventory reservations.
+
+Example:
+
+Customer begins checkout on the website.
+
+Inventory may temporarily become:
+
+On hand: `5`
+
+Reserved: `1`
+
+Available: `4`
+
+After successful payment:
+
+Reserved: `0`
+
+Sold: `1`
+
+If checkout expires:
+
+Reservation is released.
+
+Do not overbuild this if the website checkout does not currently require it, but design the inventory model so it can support it.
+
+---
+
+# STEP 19 — Production Queue
+
+For made-to-order products, create a production queue.
+
+The admin panel should eventually show:
+
+* Order
+* Product
+* Design
+* Garment
+* Color
+* Size
+* Quantity
+* Marketplace
+* Order deadline
+* Production status
+
+Possible production states:
+
+`pending`
+
+`printing`
+
+`pressed`
+
+`quality_check`
+
+`completed`
+
+The exact workflow should match the real production process.
+
+---
+
+# STEP 20 — Fulfillment Dashboard
+
+Create a central fulfillment view.
+
+I should be able to quickly see:
+
+### New Orders
+
+Orders requiring attention.
+
+### Production Required
+
+Products that need to be manufactured.
+
+### Ready to Ship
+
+Completed products awaiting shipment.
+
+### Shipped
+
+Orders already shipped.
+
+### Delivered
+
+Completed orders.
+
+### Problems
+
+Orders requiring manual intervention.
+
+---
+
+# STEP 21 — Shipping Information
+
+Where marketplace permissions and policies allow it, store relevant shipping information required for fulfillment.
+
+Examples:
+
+* Recipient name
+* Shipping address
+* Marketplace shipping method
+* Shipping label status
+* Tracking number
+* Carrier
+* Ship-by date
+* Delivery status
+
+Treat customer data as sensitive.
+
+Only store what is operationally necessary.
+
+---
+
+# STEP 22 — Customer Privacy
+
+Do not unnecessarily copy marketplace customer data.
+
+Respect marketplace restrictions and applicable privacy requirements.
+
+Do not expose customer shipping information to public frontend routes.
+
+Use appropriate Supabase Row Level Security and backend authorization.
+
+Customer/order information should only be available to authorized admin users and systems.
+
+---
+
+# STEP 23 — Shipping Labels
+
+Where officially supported, marketplace connectors may later retrieve shipping labels or label references.
+
+Do not attempt to bypass marketplace shipping systems.
+
+If a marketplace requires shipping to be managed inside its own interface, preserve that workflow.
+
+The admin dashboard can link or direct me to the required action instead of attempting unsupported automation.
+
+---
+
+# STEP 24 — Tracking Numbers
+
+Track shipping information independently from marketplace listing information.
+
+A shipment may contain:
+
+* Carrier
+* Tracking number
+* Tracking URL/reference
+* Shipped timestamp
+* Delivery timestamp
+* Shipping status
+
+Do not store shipment information directly inside the core product table.
+
+Orders and products have different lifecycles.
+
+---
+
+# STEP 25 — Marketplace Shipping Updates
+
+Where supported, shipping actions from the central system may update the marketplace.
+
+Example:
+
+Order marked shipped
+
+↓
+
+Tracking number available
+
+↓
+
+Marketplace connector updates tracking
+
+↓
+
+Marketplace confirms tracking
+
+↓
+
+Supabase records successful synchronization
+
+Use the existing Phase 4/5 job architecture where possible.
+
+---
+
+# STEP 26 — Payment Status
+
+Track payment status separately from fulfillment status.
+
+Example:
+
+Payment:
+
+`paid`
+
+Fulfillment:
+
+`production_required`
+
+These are different concepts.
+
+Possible payment states:
+
+`pending`
+
+`authorized`
+
+`paid`
+
+`partially_refunded`
+
+`refunded`
+
+`failed`
+
+`disputed`
+
+Marketplace-specific payment information should remain available separately.
+
+---
+
+# STEP 27 — Marketplace Fees
+
+Where available, capture marketplace fees separately.
+
+Example:
+
+Gross sale:
+
+`$29.99`
+
+Marketplace fee:
+
+`$3.50`
+
+Shipping charged:
+
+`$5.00`
+
+Taxes:
+
+`$2.10`
+
+Estimated net proceeds:
+
+`$26.49`
+
+Do not assume every marketplace exposes all financial information immediately.
+
+Store unavailable information as null rather than estimating it silently.
+
+---
+
+# STEP 28 — Refunds
+
+Support refunds as financial/order events.
+
+Do not simply change the order from:
+
+`paid`
+
+to:
+
+`refunded`
+
+and erase history.
+
+Preserve:
+
+* Original sale
+* Refund amount
+* Refund date
+* Refund reason, if available
+* Marketplace reference
+* Inventory impact
+
+Partial refunds should also be supported.
+
+---
+
+# STEP 29 — Cancellations
+
+A cancelled order should remain in the database.
+
+Do not delete it.
+
+Store:
+
+* Cancellation timestamp
+* Cancellation reason
+* Marketplace status
+* Inventory reversal
+* Payment/refund state
+
+Order history is operational and financial history.
+
+It should remain auditable.
+
+---
+
+# STEP 30 — Returns
+
+Prepare for return handling.
+
+A returned product does not automatically mean inventory should increase.
+
+Example:
+
+Returned shirt
+
+↓
+
+Inspection required
+
+↓
+
+Possible outcomes:
+
+`RESTOCK`
+
+`DAMAGED`
+
+`DISCARD`
+
+`REWORK`
+
+Inventory movement should depend on the final outcome.
+
+---
+
+# STEP 31 — Order Events
+
+Maintain an event timeline.
+
+Example:
+
+`10:04 — Order discovered on Depop`
+
+`10:04 — Order imported`
+
+`10:04 — Product matched`
+
+`10:05 — Payment confirmed`
+
+`10:05 — Production task created`
+
+`14:30 — Production completed`
+
+`15:10 — Shipment created`
+
+`15:20 — Tracking added`
+
+`15:21 — Depop updated`
+
+This makes debugging and operations significantly easier.
+
+---
+
+# STEP 32 — Unified Orders Dashboard
+
+Extend the admin panel with an **Orders** section.
+
+Display:
+
+* Internal order ID
+* Marketplace
+* External order ID
+* Order date
+* Customer
+* Product
+* Variant
+* Quantity
+* Total
+* Payment status
+* Production status
+* Fulfillment status
+* Shipping status
+* Tracking
+* Problems
+
+Support search and filtering.
+
+---
+
+# STEP 33 — Order Filters
+
+Useful filters may include:
+
+`Today`
+
+`New`
+
+`Paid`
+
+`Production Required`
+
+`Ready to Ship`
+
+`Shipped`
+
+`Delivered`
+
+`Cancelled`
+
+`Refunded`
+
+`Needs Attention`
+
+`Depop`
+
+`Vinted`
+
+`eBay`
+
+`Website`
+
+Also support date ranges.
+
+---
+
+# STEP 34 — Marketplace Identification
+
+Every order should clearly show its source.
+
+Example:
+
+`DEPOP`
+
+`VINTED`
+
+`EBAY`
+
+`WEBSITE`
+
+This allows operational analysis without changing the normalized internal order architecture.
+
+---
+
+# STEP 35 — Unified Daily Work Queue
+
+Create a practical operational view answering:
+
+**What do I need to do today?**
+
+For example:
+
+Production Required: `12`
+
+Ready to Ship: `8`
+
+Shipping Today: `5`
+
+Problems: `2`
+
+Unmatched Orders: `1`
+
+This is more useful operationally than simply showing a long order table.
+
+---
+
+# STEP 36 — Notifications / Attention System
+
+Create internal attention flags.
+
+Examples:
+
+`NEW_ORDER`
+
+`PRODUCTION_REQUIRED`
+
+`SHIP_TODAY`
+
+`AUTHENTICATION_REQUIRED`
+
+`UNMATCHED_PRODUCT`
+
+`PAYMENT_PROBLEM`
+
+`REFUND_REQUEST`
+
+`INVENTORY_CONFLICT`
+
+Do not create noisy notifications for normal automated operations.
+
+Focus attention on things requiring human action.
+
+---
+
+# STEP 37 — Marketplace Connector Health
+
+Reuse Phase 5 connector health monitoring.
+
+If a marketplace order connector loses authentication:
+
+Pause imports for that connector.
+
+Display:
+
+`Vinted Orders — Authentication Required`
+
+Do not allow repeated failures to flood the job queue.
+
+---
+
+# STEP 38 — Order Import Jobs
+
+Reuse the existing job architecture where possible.
+
+Potential job types:
+
+`discover_orders`
+
+`import_order`
+
+`update_order`
+
+`sync_tracking`
+
+`refresh_order_status`
+
+`process_inventory`
+
+`reconcile_order`
+
+Do not create multiple independent job systems unless technically necessary.
+
+---
+
+# STEP 39 — Order Reconciliation
+
+Periodically verify that internal order state still matches marketplace state where supported.
+
+Example:
+
+Supabase:
+
+Order → Shipped
+
+Marketplace:
+
+Order → Shipped
+
+Result:
+
+`IN SYNC`
+
+Another example:
+
+Supabase:
+
+Order → Paid
+
+Marketplace:
+
+Order → Cancelled
+
+Result:
+
+`ORDER DRIFT DETECTED`
+
+Flag for reconciliation.
+
+---
+
+# STEP 40 — Marketplace Events Are Not Canonical Product Changes
+
+A sale or order update should not unexpectedly rewrite canonical product data.
+
+Example:
+
+Marketplace order title differs slightly from canonical title.
+
+Do NOT update the canonical product title.
+
+Order records should preserve historical sale information separately.
+
+---
+
+# STEP 41 — Historical Order Data
+
+Order records should preserve the product information as it existed at the time of sale where appropriate.
+
+For example:
+
+Product currently costs:
+
+`$29.99`
+
+But order from two months ago sold for:
+
+`$24.99`
+
+The order must continue showing:
+
+`$24.99`
+
+Do not dynamically calculate historical order values from the current product table.
+
+Use order snapshots where appropriate.
+
+---
+
+# STEP 42 — Order Item Snapshots
+
+Consider storing snapshot data such as:
+
+* Product title at sale
+* Variant at sale
+* Sale price
+* Image reference
+* SKU
+* Marketplace listing ID
+
+This protects historical accuracy even if the canonical product changes later.
+
+---
+
+# STEP 43 — Admin Manual Orders
+
+Prepare the architecture for manually created orders.
+
+For example:
+
+A direct sale to:
+
+* A gym
+* An instructor
+* An event
+* A local customer
+* A wholesale customer
+
+may not originate from a marketplace.
+
+The internal order model should support:
+
+`source = manual`
+
+or an equivalent concept.
+
+This prevents the architecture from assuming every sale must come from Depop, Vinted, eBay, or the website.
+
+---
+
+# STEP 44 — Business / Bulk Orders
+
+Prepare the order model for larger orders.
+
+Example:
+
+Gym order:
+
+`50 shirts`
+
+with multiple:
+
+* Sizes
+* Designs
+* Colors
+* Quantities
+
+Do not assume:
+
+`1 order = 1 shirt`
+
+The order model must support multiple line items and quantities.
+
+---
+
+# STEP 45 — Inventory and Production Separation
+
+Inventory and production are related but not identical.
+
+Example:
+
+Blank black T-shirt:
+
+Inventory item
+
+Design:
+
+Digital asset
+
+Finished BJJ shirt:
+
+Produced item
+
+Eventually the system may need to track raw materials separately from finished products.
+
+Do not force this complexity into Phase 6 if it is not currently necessary.
+
+However, avoid designing the schema in a way that prevents it later.
+
+---
+
+# STEP 46 — Future Raw Material Inventory
+
+Keep future support possible for:
+
+* Blank shirts
+* Sizes
+* Colors
+* DTF transfers
+* Packaging
+* Shipping materials
+
+A future production system may calculate:
+
+Order:
+
+`2 black XL shirts`
+
+requires:
+
+`2 blank black XL garments`
+
+plus:
+
+`2 transfers`
+
+This does not need full implementation now unless already useful.
+
+---
+
+# STEP 47 — Operational Metrics
+
+Prepare data so future analytics can calculate:
+
+* Orders per day
+* Units sold
+* Sales by marketplace
+* Average order value
+* Production volume
+* Fulfillment time
+* Cancellation rate
+* Refund rate
+* Marketplace fees
+* Net revenue
+
+Do not build the complete analytics platform during Phase 6.
+
+That should be a separate phase.
+
+The goal here is to ensure the order data is clean enough to support it.
+
+---
+
+# STEP 48 — Security
+
+Order data contains sensitive information.
+
+Implement appropriate protection.
+
+Review:
+
+* Supabase RLS
+* Admin authorization
+* Server-only access
+* Sensitive logs
+* Customer information
+* Shipping addresses
+* Marketplace tokens
+
+Never expose order/customer data through public website queries.
+
+---
+
+# STEP 49 — Auditability
+
+Important actions must be traceable.
+
+Examples:
+
+* Order imported
+* Order manually edited
+* Product manually matched
+* Inventory adjusted
+* Production completed
+* Tracking added
+* Order cancelled
+* Refund recorded
+* Return processed
+
+Record:
+
+* action
+* timestamp
+* source
+* relevant user/system actor
+* before/after state where appropriate
+
+---
+
+# STEP 50 — Testing Strategy
+
+Do NOT immediately enable full order ingestion across all marketplaces.
+
+Test progressively.
+
+### Test 1 — One Marketplace Order
+
+Import one existing/test order.
+
+Verify:
+
+* Order ID
+* Marketplace
+* Product matching
+* Variant
+* Quantity
+* Price
+* Status
+
+### Test 2 — Duplicate Import
+
+Import the same marketplace order again.
+
+Expected:
+
+NO DUPLICATE ORDER.
+
+### Test 3 — Made-to-Order Product
+
+Import a sale.
+
+Expected:
+
+Production task created.
+
+### Test 4 — Tracked Inventory
+
+Inventory:
+
+`5`
+
+Order quantity:
+
+`1`
+
+Expected:
+
+Available inventory becomes `4`.
+
+### Test 5 — Unique Item
+
+Inventory:
+
+`1`
+
+Order occurs.
+
+Expected:
+
+Available inventory becomes `0`.
+
+Other marketplace availability should be updated according to policy.
+
+### Test 6 — Cancellation
+
+Cancel an order.
+
+Verify inventory reversal behavior.
+
+### Test 7 — Refund
+
+Process a refund event.
+
+Verify financial history remains intact.
+
+### Test 8 — Unmatched Product
+
+Import an external order with no matching internal product.
+
+Expected:
+
+Order imported successfully.
+
+Status:
+
+`MATCH_REQUIRED`
+
+No data loss.
+
+---
+
+# STEP 51 — Small Batch Test
+
+After individual tests succeed:
+
+Import approximately 5–10 orders.
+
+Verify:
+
+* No duplicates
+* Correct marketplace attribution
+* Product matching
+* Variant matching
+* Inventory movements
+* Production queue
+* Payment status
+* Fulfillment status
+* Audit events
+
+STOP.
+
+Show me the results.
+
+Wait for approval before broader rollout.
+
+---
+
+# STEP 52 — Marketplace Rollout
+
+After the first order connector works reliably:
+
+Add the next marketplace.
+
+Recommended pattern:
+
+1. Website orders
+2. First external marketplace
+3. Second marketplace
+4. Third marketplace
+
+The exact order should depend on which channels are actually active and technically supported.
+
+Do not implement every connector simultaneously.
+
+---
+
+# STEP 53 — Admin Dashboard Integration
+
+At the end of Phase 6, the admin panel should contain at least:
+
+### Products
+
+Canonical product management.
+
+### Publishing
+
+Marketplace publishing jobs.
+
+### Synchronization
+
+Marketplace listing synchronization.
+
+### Orders
+
+Unified order management.
+
+### Production
+
+Made-to-order work queue.
+
+### Fulfillment
+
+Shipping workflow.
+
+### Inventory
+
+Availability and inventory movements.
+
+### Attention
+
+Operational problems requiring action.
+
+Reuse the existing UI architecture instead of creating disconnected admin applications.
+
+---
+
+# STEP 54 — Definition of Done
+
+Phase 6 is complete when:
+
+* Orders from supported channels can enter Supabase.
+* Orders use a normalized internal structure.
+* External marketplace IDs are preserved.
+* Duplicate orders are prevented.
+* Order items map to canonical products.
+* Unmatched products are handled safely.
+* Variants and quantities are preserved.
+* Made-to-order products can generate production work.
+* Inventory changes are auditable.
+* Limited inventory is protected against overselling.
+* Order status is normalized.
+* Payment and fulfillment status are separate.
+* Shipping information can be tracked.
+* Cancellations remain in history.
+* Refunds remain in history.
+* Returns can be represented.
+* The admin panel provides a unified orders view.
+* Marketplace source is always identifiable.
+* Sensitive customer information is protected.
+* The architecture supports direct/manual orders.
+* The architecture supports multi-item and bulk orders.
+
+---
+
+# FINAL ARCHITECTURE AFTER PHASE 6
+
+The complete operational loop should now conceptually be:
+
+## PRODUCT FLOW
+
+**Admin Panel**
+
+↓
+
+**Supabase**
+
+↓
+
+**Publishing Engine**
+
+↓
+
+**Website / Depop / Vinted / eBay**
+
+## SYNCHRONIZATION FLOW
+
+**Supabase**
+
+↓
+
+**Synchronization Engine**
+
+↔
+
+**Marketplace Listing State**
+
+## SALES FLOW
+
+**Website / Depop / Vinted / eBay**
+
+↓
+
+**Order Connectors**
+
+↓
+
+**Normalized Orders**
+
+↓
+
+**Supabase**
+
+## OPERATIONS FLOW
+
+**Order**
+
+↓
+
+**Inventory / Production**
+
+↓
+
+**Fulfillment**
+
+↓
+
+**Shipping**
+
+↓
+
+**Delivery**
+
+## CONTROL CENTER
+
+Everything returns to:
+
+**Admin Panel**
+
+At this point, the system should no longer be simply a product publishing tool.
+
+It becomes the beginning of a centralized **commerce operating system** for the business.
+
+---
+
+# IMPORTANT EXECUTION ORDER
+
+Do NOT immediately implement everything described in this document.
+
+First:
+
+1. Inspect the completed Phase 5 architecture.
+2. Inspect any existing website order/checkout system.
+3. Inspect existing inventory structures.
+4. Research supported order integrations for each marketplace.
+5. Identify the best marketplace for the first order integration.
+6. Design the canonical order schema.
+7. Design order-item snapshots.
+8. Design product/variant matching.
+9. Design duplicate protection.
+10. Design order status normalization.
+11. Design inventory policies.
+12. Design inventory movements.
+13. Design made-to-order workflow.
+14. Design fulfillment workflow.
+15. Review privacy/security requirements.
+16. Present the complete implementation plan.
+17. Identify database changes.
+18. Identify risks.
+19. **STOP AND WAIT FOR MY APPROVAL.**
+
+After approval:
+
+20. Implement the canonical order model.
+21. Implement ONE order source.
+22. Import ONE test order.
+23. Verify product matching.
+24. Verify inventory behavior.
+25. Verify production behavior.
+26. Verify admin dashboard.
+27. **STOP AND SHOW ME THE RESULT.**
+28. After approval, test a small batch.
+29. Only then expand to additional marketplaces.
+
+---
+
+# CORE PRINCIPLE
+
+Phases 1–5 created the system that answers:
+
+**"What products do I sell, where should they be published, and are those listings synchronized?"**
+
+Phase 6 adds the system that answers:
+
+**"What did I sell, where did I sell it, what do I need to produce, what do I need to ship, and what happened to my inventory?"**
+
+The final objective is:
+
+**One product system.**
+
+**Multiple sales channels.**
+
+**One order center.**
+
+**One production queue.**
+
+**One inventory view.**
+
+**One operational control center.**
