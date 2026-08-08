@@ -15,11 +15,16 @@ export interface StoreProduct {
   condition: string | null;
   material: string | null;
   status: 'draft' | 'active' | 'archived';
+  desired_channels: string[];
 }
+
+export const SALES_CHANNELS = ['website', 'depop', 'vinted', 'ebay'] as const;
+export type SalesChannel = (typeof SALES_CHANNELS)[number];
 
 export interface StoreProductVariant {
   id: string;
   created_at: string;
+  updated_at: string;
   product_id: string;
   size: string | null;
   color: string | null;
@@ -143,6 +148,11 @@ export async function getMarketplaceListingsForVariants(variantIds: string[]): P
   if (error || !data) return [];
   return data as MarketplaceListing[];
 }
+
+// Re-exported from a dependency-free module so server routes can use the same checklist
+// without pulling in supabase-browser.ts (see src/lib/completeness.ts for why).
+export type { CompletenessCheck } from './completeness';
+export { getCompletenessChecklist } from './completeness';
 
 export function slugifyTitle(input: string): string {
   return (

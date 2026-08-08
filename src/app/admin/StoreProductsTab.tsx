@@ -2,14 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase-browser';
-import { getAllStoreProducts, resolveImageUrl, StoreProductWithVariants } from '@/lib/store';
+import { getAllStoreProducts, getCompletenessChecklist, resolveImageUrl, SALES_CHANNELS, StoreProductWithVariants } from '@/lib/store';
 
 const STATUS_STYLES: Record<string, string> = {
   draft: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
   active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
   archived: 'bg-slate-500/10 text-slate-400 border-slate-500/30',
 };
+
+const CHANNEL_INITIALS: Record<string, string> = { website: 'W', depop: 'D', vinted: 'V', ebay: 'E' };
 
 function priceRange(product: StoreProductWithVariants): string {
   const prices = product.variants.map((v) => Number(v.price)).filter((p) => !isNaN(p));
@@ -20,6 +23,7 @@ function priceRange(product: StoreProductWithVariants): string {
 }
 
 export default function StoreProductsTab() {
+  const router = useRouter();
   const [products, setProducts] = useState<StoreProductWithVariants[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +32,7 @@ export default function StoreProductsTab() {
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -54,6 +59,72 @@ export default function StoreProductsTab() {
       next.delete(id);
       return next;
     });
+  };
+
+  const handleDuplicate = async (product: StoreProductWithVariants) => {
+    setDuplicatingId(product.id);
+    setDeleteError('');
+    try {
+      const newSlug = `${product.slug}-copy-${Date.now().toString().slice(-5)}`;
+      const { data: newProduct, error: productError } = await supabase
+        .from('cs_store_products')
+        .insert({
+          slug: newSlug,
+          title: `${product.title} (Copy)`,
+          description: product.description,
+          category: product.category,
+          subcategory: product.subcategory,
+          brand: product.brand,
+          condition: product.condition,
+          material: product.material,
+          status: 'draft',
+          desired_channels: product.desired_channels || [],
+        })
+        .select('id')
+        .single();
+
+      if (productError || !newProduct) throw new Error(productError?.message || 'Failed to duplicate product.');
+
+      if (product.tags.length > 0) {
+        await supabase.from('cs_store_product_tags').insert(product.tags.map((tag) => ({ product_id: newProduct.id, tag })));
+      }
+
+      // Variants and images are copied; marketplace listings are deliberately NOT — the duplicate
+      // must never inherit the original's external Depop/Vinted/eBay identity.
+      for (const variant of product.variants) {
+        const { data: newVariant, error: variantError } = await supabase
+          .from('cs_store_product_variants')
+          .insert({
+            product_id: newProduct.id,
+            size: variant.size,
+            color: variant.color,
+            price: variant.price,
+            currency: variant.currency,
+            quantity: variant.quantity,
+            sku: variant.sku,
+          })
+          .select('id')
+          .single();
+
+        if (variantError || !newVariant) continue;
+
+        if (variant.images.length > 0) {
+          await supabase.from('cs_store_product_images').insert(
+            variant.images.map((img) => ({
+              variant_id: newVariant.id,
+              position: img.position,
+              storage_path: img.storage_path,
+              source_url: img.source_url,
+            }))
+          );
+        }
+      }
+
+      router.push(`/admin/store-products/${newProduct.id}`);
+    } catch (e) {
+      setDeleteError((e as Error).message);
+      setDuplicatingId(null);
+    }
   };
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -237,6 +308,7 @@ export default function StoreProductsTab() {
             const primaryImage = product.variants.flatMap((v) => v.images)[0];
             const imageUrl = resolveImageUrl(primaryImage);
             const isSelected = selectedIds.has(product.id);
+            const incompleteCount = getCompletenessChecklist(product).filter((c) => !c.passed).length;
             return (
               <div
                 key={product.id}
@@ -257,10 +329,18 @@ export default function StoreProductsTab() {
                       className="size-4 cursor-pointer"
                     />
                   </label>
-                  <div
-                    className={`absolute top-3 right-3 px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border ${STATUS_STYLES[product.status]}`}
-                  >
-                    {product.status}
+                  <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
+                    <div className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border ${STATUS_STYLES[product.status]}`}>
+                      {product.status}
+                    </div>
+                    {incompleteCount > 0 && (
+                      <div
+                        className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                        title="Missing required info"
+                      >
+                        ⚠ {incompleteCount} missing
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -270,6 +350,24 @@ export default function StoreProductsTab() {
                       {product.category || 'Uncategorized'} · {product.variants.length} variant{product.variants.length !== 1 ? 's' : ''}
                     </span>
                     <h3 className="text-base font-extrabold text-white uppercase tracking-tight">{product.title}</h3>
+                  </div>
+
+                  <div className="flex items-center gap-1.5" title="Desired sales channels">
+                    {SALES_CHANNELS.map((channel) => {
+                      const desired = (product.desired_channels || []).includes(channel);
+                      return (
+                        <span
+                          key={channel}
+                          className={`size-5 rounded-md flex items-center justify-center text-[10px] font-black border ${
+                            desired
+                              ? 'bg-red-500/15 text-red-400 border-red-500/40'
+                              : 'bg-slate-900 text-slate-600 border-slate-800'
+                          }`}
+                        >
+                          {CHANNEL_INITIALS[channel]}
+                        </span>
+                      );
+                    })}
                   </div>
 
                   <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
@@ -296,6 +394,14 @@ export default function StoreProductsTab() {
                     >
                       Edit
                     </Link>
+                    <button
+                      onClick={() => handleDuplicate(product)}
+                      disabled={duplicatingId === product.id}
+                      className="touch-target px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                      title="Duplicate product (variants + images copied, Depop link never copied)"
+                    >
+                      {duplicatingId === product.id ? 'Copying…' : 'Duplicate'}
+                    </button>
                     <button
                       onClick={() => handleDelete(product.id, product.title)}
                       className="touch-target px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"

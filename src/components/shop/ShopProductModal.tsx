@@ -161,7 +161,7 @@ export const ShopProductModal: React.FC<ShopProductModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-5xl" ariaLabel={`View ${product.title}`}>
-      <div className="grid grid-cols-1 md:grid-cols-12 min-h-[500px]">
+      <div className="grid grid-cols-1 md:grid-cols-12 min-h-125">
         {/* Gallery Column */}
         <div className="md:col-span-7 bg-paper p-4 sm:p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-border rounded-t-panel md:rounded-l-panel md:rounded-tr-none">
           {/* Main Photo Viewer */}

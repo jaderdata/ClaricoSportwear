@@ -6,6 +6,7 @@ import { QuoteRequest, Product, PartnerAcademy, DEFAULT_PARTNER_ACADEMIES } from
 import { supabase } from '@/lib/supabase-browser';
 import Link from 'next/link';
 import StoreProductsTab from './StoreProductsTab';
+import PublishingTab from './PublishingTab';
 
 const MOCK_QUOTES: QuoteRequest[] = [
   {
@@ -93,7 +94,7 @@ const FALLBACK_PRODUCTS: Product[] = [
 export default function AdminDashboardClient() {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<'quotes' | 'products' | 'store' | 'academies'>('quotes');
+  const [activeTab, setActiveTab] = useState<'quotes' | 'products' | 'store' | 'publishing' | 'academies'>('quotes');
 
   const [quotes, setQuotes] = useState<QuoteRequest[]>(MOCK_QUOTES);
   const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
@@ -612,6 +613,14 @@ export default function AdminDashboardClient() {
                 Store Products
               </button>
               <button
+                onClick={() => setActiveTab('publishing')}
+                className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer ${
+                  activeTab === 'publishing' ? 'bg-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Publishing
+              </button>
+              <button
                 onClick={() => setActiveTab('academies')}
                 className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer ${
                   activeTab === 'academies' ? 'bg-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
@@ -670,6 +679,14 @@ export default function AdminDashboardClient() {
             }`}
           >
             Store
+          </button>
+          <button
+            onClick={() => setActiveTab('publishing')}
+            className={`flex-1 py-2 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-colors ${
+              activeTab === 'publishing' ? 'bg-red-600 text-white' : 'bg-slate-900 text-slate-400'
+            }`}
+          >
+            Publish
           </button>
           <button
             onClick={() => setActiveTab('academies')}
@@ -906,6 +923,8 @@ export default function AdminDashboardClient() {
 
         {/* TAB 3: STORE PRODUCTS (D2C catalog, feeds /shop) */}
         {activeTab === 'store' && <StoreProductsTab />}
+
+        {activeTab === 'publishing' && <PublishingTab />}
 
         {/* ── ACADEMIAS PARCEIRAS TAB ── */}
         {activeTab === 'academies' && (

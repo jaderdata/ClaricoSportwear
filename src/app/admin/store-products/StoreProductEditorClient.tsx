@@ -5,14 +5,24 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase-browser';
 import {
+  getCompletenessChecklist,
   getMarketplaceListingsForVariants,
   getStoreProductById,
   MarketplaceListing,
   resolveImageUrl,
+  SALES_CHANNELS,
+  SalesChannel,
   slugifyTitle,
   StoreProductVariantWithImages,
   StoreProductWithVariants,
 } from '@/lib/store';
+
+const CHANNEL_LABELS: Record<SalesChannel, string> = {
+  website: 'Website',
+  depop: 'Depop',
+  vinted: 'Vinted',
+  ebay: 'eBay',
+};
 
 interface Props {
   productId?: string;
@@ -48,6 +58,7 @@ export default function StoreProductEditorClient({ productId }: Props) {
   const [slug, setSlug] = useState('');
   const [fields, setFields] = useState<BasicFields>(EMPTY_FIELDS);
   const [tagsInput, setTagsInput] = useState('');
+  const [desiredChannels, setDesiredChannels] = useState<string[]>([]);
   const [variants, setVariants] = useState<StoreProductVariantWithImages[]>([]);
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
 
@@ -77,6 +88,7 @@ export default function StoreProductEditorClient({ productId }: Props) {
         status: product.status,
       });
       setTagsInput(product.tags.join(', '));
+      setDesiredChannels(product.desired_channels || []);
       setVariants(product.variants);
       const variantIds = product.variants.map((v) => v.id);
       setListings(await getMarketplaceListingsForVariants(variantIds));
@@ -103,6 +115,7 @@ export default function StoreProductEditorClient({ productId }: Props) {
       condition: fields.condition.trim() || null,
       material: fields.material.trim() || null,
       status: fields.status,
+      desired_channels: desiredChannels,
     };
 
     if (isNew) {
@@ -151,6 +164,17 @@ export default function StoreProductEditorClient({ productId }: Props) {
       return;
     }
     router.push('/admin');
+  };
+
+  const toggleChannel = (channel: SalesChannel) => {
+    setDesiredChannels((prev) => (prev.includes(channel) ? prev.filter((c) => c !== channel) : [...prev, channel]));
+  };
+
+  /** "Actual" state per channel: website mirrors the product's own status; others come from real marketplace_listings. */
+  const actualChannelStatus = (channel: SalesChannel): string => {
+    if (channel === 'website') return fields.status === 'active' ? 'Active' : 'Not published';
+    const listing = listings.find((l) => l.marketplace === channel);
+    return listing ? listing.status : 'Not published';
   };
 
   const handleAddVariant = async () => {
@@ -240,6 +264,14 @@ export default function StoreProductEditorClient({ productId }: Props) {
     return <div className="min-h-screen bg-[#090a0f] text-slate-400 flex items-center justify-center">Loading…</div>;
   }
 
+  const checklist = getCompletenessChecklist({
+    title: fields.title,
+    description: fields.description,
+    category: fields.category,
+    variants,
+  } as StoreProductWithVariants);
+  const incompleteCount = checklist.filter((c) => !c.passed).length;
+
   return (
     <div className="min-h-screen bg-[#090a0f] text-slate-100 font-sans">
       <header className="glass-panel border-b border-(--border-subtle)">
@@ -256,6 +288,33 @@ export default function StoreProductEditorClient({ productId }: Props) {
 
       <main className="max-w-4xl mx-auto px-6 py-10 space-y-8">
         {error && <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold">{error}</div>}
+
+        <div
+          className={`glass-card p-6 rounded-2xl border space-y-3 ${
+            incompleteCount === 0 ? 'border-emerald-500/30' : 'border-amber-500/30'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-400">Completeness</h2>
+            <span
+              className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border ${
+                incompleteCount === 0
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+              }`}
+            >
+              {incompleteCount === 0 ? 'Ready to sell' : `${incompleteCount} item(s) missing`}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {checklist.map((c) => (
+              <div key={c.label} className={`flex items-center gap-1.5 text-xs ${c.passed ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <span>{c.passed ? '✓' : '✗'}</span>
+                <span>{c.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <form onSubmit={handleSaveBasics} className="glass-card p-6 rounded-2xl border border-(--border-subtle) space-y-4">
           <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-400">Basic Info</h2>
@@ -360,6 +419,54 @@ export default function StoreProductEditorClient({ productId }: Props) {
             {saving ? 'Saving…' : isNew ? 'Create Product' : 'Save Changes'}
           </button>
         </form>
+
+        <div className="glass-card p-6 rounded-2xl border border-(--border-subtle) space-y-4">
+          <div>
+            <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-400">Sales Channels</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Where you <strong className="text-slate-300">want</strong> this sold — separate from where it{' '}
+              <strong className="text-slate-300">actually is</strong>. Checking a box here doesn&apos;t publish anything by itself
+              (no automation yet); it just records intent for when publishing is built.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {SALES_CHANNELS.map((channel) => {
+              const desired = desiredChannels.includes(channel);
+              const actual = actualChannelStatus(channel);
+              const isLive = actual.toLowerCase() === 'active';
+              return (
+                <label
+                  key={channel}
+                  className={`p-3 rounded-xl border cursor-pointer transition-colors space-y-2 ${
+                    desired ? 'border-red-500/40 bg-red-500/5' : 'border-slate-800 bg-slate-900/60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold text-white uppercase">{CHANNEL_LABELS[channel]}</span>
+                    <input
+                      type="checkbox"
+                      checked={desired}
+                      onChange={() => toggleChannel(channel)}
+                      className="size-4 cursor-pointer"
+                    />
+                  </div>
+                  <div
+                    className={`text-[10px] font-bold uppercase px-2 py-1 rounded-md border inline-block ${
+                      isLive
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                        : desired
+                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                        : 'bg-slate-800 text-slate-500 border-slate-700'
+                    }`}
+                  >
+                    {actual}
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
 
         {!isNew && (
           <div className="glass-card p-6 rounded-2xl border border-(--border-subtle) space-y-5">

@@ -193,7 +193,7 @@ export const ShopProductCard: React.FC<Props> = ({ product }) => {
             {/* Title - Fixed 2-line height for uniform card alignment */}
             <h3
               onClick={() => setIsModalOpen(true)}
-              className="font-medium text-[15px] text-ink leading-snug line-clamp-2 min-h-[2.5rem] flex items-center cursor-pointer hover:text-accent transition-colors"
+              className="font-medium text-[15px] text-ink leading-snug line-clamp-2 min-h-10 flex items-center cursor-pointer hover:text-accent transition-colors"
               title={product.title}
             >
               {product.title}
@@ -209,7 +209,7 @@ export const ShopProductCard: React.FC<Props> = ({ product }) => {
           </div>
 
           {/* Variant Selector Area (Fixed Min-Height for Grid Alignment) */}
-          <div className="min-h-[2rem] flex items-center gap-2 flex-wrap">
+          <div className="min-h-8 flex items-center gap-2 flex-wrap">
             {sizes.length > 1 && (
               <div className="flex items-center gap-1">
                 <span className="text-[10px] text-ink-muted uppercase font-semibold">Size:</span>

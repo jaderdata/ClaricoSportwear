@@ -23,6 +23,18 @@ interface Progress {
   label: string;
 }
 
+interface CleanupScan {
+  dryRun: true;
+  duplicateVariantsFound: number;
+  ambiguousGroupsSkipped: number;
+}
+
+interface CleanupResult {
+  dryRun: false;
+  deleted: number;
+  ambiguousGroupsSkipped: number;
+}
+
 export default function ImportClient() {
   const [running, setRunning] = useState<'test' | 'full' | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
@@ -119,6 +131,56 @@ export default function ImportClient() {
   };
 
   const percent = progress && progress.total > 0 ? Math.round((progress.processed / progress.total) * 100) : 0;
+
+  const [cleanupBusy, setCleanupBusy] = useState(false);
+  const [cleanupScan, setCleanupScan] = useState<CleanupScan | null>(null);
+  const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+  const [cleanupError, setCleanupError] = useState('');
+
+  const runCleanupScan = async () => {
+    setCleanupBusy(true);
+    setCleanupError('');
+    setCleanupResult(null);
+    try {
+      const res = await fetch('/api/admin/cleanup-duplicate-variants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: false }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      setCleanupScan(data);
+    } catch (e) {
+      setCleanupError((e as Error).message);
+    } finally {
+      setCleanupBusy(false);
+    }
+  };
+
+  const runCleanupDelete = async () => {
+    if (!cleanupScan || cleanupScan.duplicateVariantsFound === 0) return;
+    if (!confirm(`Delete ${cleanupScan.duplicateVariantsFound} duplicate variant(s)? The linked (Depop) copy is always kept.`)) return;
+    setCleanupBusy(true);
+    setCleanupError('');
+    try {
+      const res = await fetch('/api/admin/cleanup-duplicate-variants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      setCleanupResult(data);
+      setCleanupScan(null);
+      alert(`Deleted ${data.deleted} duplicate variant(s).`);
+    } catch (e) {
+      const message = (e as Error).message;
+      setCleanupError(message);
+      alert(`Cleanup failed: ${message}`);
+    } finally {
+      setCleanupBusy(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#090a0f] text-slate-100 flex flex-col font-sans">
@@ -233,6 +295,56 @@ export default function ImportClient() {
             )}
           </div>
         )}
+
+        <div className="glass-card p-6 rounded-2xl border border-(--border-subtle) space-y-4">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-[0.2em] text-red-500 block mb-1">One-off Tool</span>
+            <h2 className="text-lg font-black text-white uppercase tracking-tight">Cleanup Duplicate Variants</h2>
+            <p className="text-xs text-slate-400 mt-1">
+              Finds variants duplicated by re-running the import (same product + size + color, one linked to Depop, one not) and
+              deletes only the unlinked duplicate. Scan first — nothing is deleted until you confirm.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={runCleanupScan}
+              disabled={cleanupBusy}
+              className="touch-target px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-extrabold text-xs uppercase tracking-wider cursor-pointer disabled:opacity-50"
+            >
+              {cleanupBusy && !cleanupScan ? 'Scanning…' : 'Scan for Duplicates'}
+            </button>
+            {cleanupScan && cleanupScan.duplicateVariantsFound > 0 && (
+              <button
+                onClick={runCleanupDelete}
+                disabled={cleanupBusy}
+                className="touch-target px-5 py-2.5 rounded-xl bg-linear-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-xs uppercase tracking-wider cursor-pointer disabled:opacity-50"
+              >
+                {cleanupBusy ? 'Deleting…' : `Delete ${cleanupScan.duplicateVariantsFound} Duplicate(s)`}
+              </button>
+            )}
+          </div>
+
+          {cleanupError && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold">{cleanupError}</div>
+          )}
+
+          {cleanupScan && (
+            <div className="text-xs text-slate-300">
+              Found <strong className="text-white">{cleanupScan.duplicateVariantsFound}</strong> duplicate variant(s) to remove.
+              {cleanupScan.ambiguousGroupsSkipped > 0 && (
+                <span className="text-amber-400"> {cleanupScan.ambiguousGroupsSkipped} group(s) didn&apos;t match the expected pattern and were left untouched.</span>
+              )}
+            </div>
+          )}
+
+          {cleanupResult && (
+            <div className="text-xs text-emerald-400 font-semibold">
+              ✓ Deleted {cleanupResult.deleted} duplicate variant(s).
+              {cleanupResult.ambiguousGroupsSkipped > 0 && ` ${cleanupResult.ambiguousGroupsSkipped} group(s) skipped.`}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

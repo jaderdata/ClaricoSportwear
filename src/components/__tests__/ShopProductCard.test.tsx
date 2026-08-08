@@ -35,11 +35,13 @@ const dummyProduct: StoreProductWithVariants = {
   condition: 'New',
   material: 'Cotton',
   status: 'active',
+  desired_channels: [],
   tags: ['tee', 'sport'],
   variants: [
     {
       id: 'var-1',
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       product_id: 'prod-1',
       size: 'M',
       color: 'Black',
@@ -67,6 +69,7 @@ const dummyProduct: StoreProductWithVariants = {
     {
       id: 'var-2',
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       product_id: 'prod-1',
       size: 'L',
       color: 'Black',
